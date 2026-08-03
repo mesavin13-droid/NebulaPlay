@@ -1,15 +1,23 @@
-import { useEffect, useState } from 'react'
-import { ratingLabel, type Title } from '../data'
+import { useEffect, useState } from "react"
+import { ratingLabel, type Title } from "../data"
 import {
   clearHistory,
   historyEpisode,
   removeHistory,
   useHistory,
   type HistoryRecord,
-} from '../history'
-import { togglePlaylist, usePlaylist } from '../playlist'
-import type { Catalog } from '../useCatalog'
-import { IconCheck, IconPlay, IconPlus, IconStar, Img, PosterCard, SectionHeader } from '../ui'
+} from "../history"
+import { togglePlaylist, usePlaylist } from "../playlist"
+import type { Catalog } from "../useCatalog"
+import {
+  IconCheck,
+  IconPlay,
+  IconPlus,
+  IconStar,
+  Img,
+  PosterCard,
+  SectionHeader,
+} from "../ui"
 
 export function Home({
   catalog,
@@ -26,15 +34,19 @@ export function Home({
 }) {
   // Hooks run unconditionally so the guard below never changes hook order.
   const [slide, setSlide] = useState(0)
-  const [rankTab, setRankTab] = useState<'热播' | '好评' | '新番'>('热播')
+  const [rankTab, setRankTab] = useState<"热播" | "好评" | "新番">("热播")
   const history = useHistory(sourceId)
-  const continueHistory = history.filter((item) => item.progress > 0 && item.progress < 95)
+  const continueHistory = history.filter(
+    (item) => item.progress > 0 && item.progress < 95,
+  )
   const playlist = usePlaylist(sourceId)
 
   const titles = catalog?.titles ?? []
   const hero = catalog?.hero
   const ranking = catalog?.ranking ?? []
-  const heroSlides = hero ? [hero, ...titles.filter((t) => t.id !== hero.id)].slice(0, 4) : []
+  const heroSlides = hero
+    ? [hero, ...titles.filter((t) => t.id !== hero.id)].slice(0, 4)
+    : []
   const slideCount = Math.max(1, heroSlides.length)
 
   useEffect(() => {
@@ -49,15 +61,18 @@ export function Home({
   if (!catalog || !hero)
     return (
       <div className="mx-auto max-w-[1440px] px-4 pb-16 lg:px-8">
-        <section className="grid gap-4 pt-5 lg:grid-cols-[1fr_320px]" aria-label="首页内容加载中">
-          <div className="aspect-[16/7] animate-pulse rounded-lg bg-[#10121a] ring-1 ring-white/6">
+        <section
+          className="grid min-w-0 gap-4 pt-5 lg:grid-cols-[minmax(0,1fr)_320px]"
+          aria-label="首页内容加载中"
+        >
+          <div className="min-w-0 aspect-[16/7] animate-pulse rounded-lg bg-[#10121a] ring-1 ring-white/6">
             <div className="flex h-full flex-col justify-end gap-3 p-6">
               <div className="h-7 w-2/5 rounded bg-white/8" />
               <div className="h-4 w-3/5 rounded bg-white/5" />
               <div className="h-10 w-28 rounded bg-[#e0142c]/25" />
             </div>
           </div>
-          <div className="space-y-4">
+          <div className="min-w-0 space-y-4">
             <div className="h-72 animate-pulse rounded-lg bg-[#10121a] ring-1 ring-white/6" />
             <div className="h-28 animate-pulse rounded-lg bg-[#10121a] ring-1 ring-white/6" />
           </div>
@@ -67,7 +82,10 @@ export function Home({
           <div className="mb-4 h-6 w-40 animate-pulse rounded bg-white/8" />
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
             {Array.from({ length: 6 }).map((_, index) => (
-              <div key={index} className="aspect-[2/3] animate-pulse rounded-lg bg-[#10121a]" />
+              <div
+                key={index}
+                className="aspect-[2/3] animate-pulse rounded-lg bg-[#10121a]"
+              />
             ))}
           </div>
         </section>
@@ -77,26 +95,41 @@ export function Home({
 
   // 热播榜三个 tab 各自取数:热播出片源榜单,好评按评分,新番按年份。
   const rankList = (() => {
-    if (rankTab === '热播') return ranking
+    if (rankTab === "热播") return ranking
     const sorted = [...titles].sort((a, b) =>
-      rankTab === '好评' ? b.rating - a.rating : b.year - a.year,
+      rankTab === "好评" ? b.rating - a.rating : b.year - a.year,
     )
     return sorted.slice(0, 8).map((t) => ({
       name: t.name,
-      hot: rankTab === '好评' ? ratingLabel(t) : String(t.year),
+      hot: rankTab === "好评" ? ratingLabel(t) : String(t.year),
       titleId: t.id,
     }))
   })()
 
   const rows = [
-    { title: '今日热门电影', cat: '电影', items: titles.slice(1, 9), ranked: false },
-    { title: '人气推荐', cat: '推荐', items: [...titles].slice(6).concat(titles.slice(0, 2)), ranked: false },
-    { title: '高分榜单', cat: '推荐', items: [...titles].sort((a, b) => b.rating - a.rating).slice(0, 8), ranked: true },
+    {
+      title: "今日热门电影",
+      cat: "电影",
+      items: titles.slice(1, 9),
+      ranked: false,
+    },
+    {
+      title: "人气推荐",
+      cat: "推荐",
+      items: [...titles].slice(6).concat(titles.slice(0, 2)),
+      ranked: false,
+    },
+    {
+      title: "高分榜单",
+      cat: "推荐",
+      items: [...titles].sort((a, b) => b.rating - a.rating).slice(0, 8),
+      ranked: true,
+    },
   ]
 
   return (
     <div className="mx-auto max-w-[1440px] px-4 pb-16 lg:px-8">
-      <section className="grid gap-4 pt-5 lg:grid-cols-[1fr_320px]">
+      <section className="grid min-w-0 gap-4 pt-5 lg:grid-cols-[minmax(0,1fr)_320px]">
         <HeroBanner
           hero={current}
           slide={slide}
@@ -107,18 +140,22 @@ export function Home({
           inList={playlist.some((p) => p.titleId === current.id)}
         />
 
-        <aside className="flex flex-col gap-4">
+        <aside className="flex min-w-0 flex-col gap-4">
           <div className="rounded-xl border border-white/6 bg-[#0e1018] p-4">
             <div className="mb-3 flex items-center gap-4 border-b border-white/6 pb-2">
               <h3 className="flex items-center gap-2 font-serif text-base font-bold text-white">
                 <span className="text-[#e0142c]">🔥</span> 星幕热播榜
               </h3>
               <div className="ml-auto flex gap-2 text-xs">
-                {(['热播', '好评', '新番'] as const).map((tab) => (
+                {(["热播", "好评", "新番"] as const).map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setRankTab(tab)}
-                    className={rankTab === tab ? 'font-bold text-white' : 'text-[#5a5f70]'}
+                    className={
+                      rankTab === tab
+                        ? "font-bold text-white"
+                        : "text-[#5a5f70]"
+                    }
                   >
                     {tab}
                   </button>
@@ -134,7 +171,7 @@ export function Home({
                   >
                     <span
                       className={`w-5 text-center font-display text-lg font-bold italic ${
-                        i < 3 ? 'text-[#e0142c]' : 'text-[#4a4f60]'
+                        i < 3 ? "text-[#e0142c]" : "text-[#4a4f60]"
                       }`}
                     >
                       {i + 1}
@@ -142,7 +179,9 @@ export function Home({
                     <span className="flex-1 truncate text-sm text-[#c9ccd6] transition hover:text-white">
                       {r.name}
                     </span>
-                    <span className="text-xs tabular-nums text-[#e8b23a]">{r.hot}</span>
+                    <span className="text-xs tabular-nums text-[#e8b23a]">
+                      {r.hot}
+                    </span>
                   </button>
                 </li>
               ))}
@@ -150,7 +189,9 @@ export function Home({
           </div>
 
           <div className="rounded-xl border border-white/6 bg-gradient-to-br from-[#12141d] to-[#0e1018] p-4">
-            <h3 className="mb-1 font-serif text-base font-bold text-white">完全免费 · 公益驱动</h3>
+            <h3 className="mb-1 font-serif text-base font-bold text-white">
+              完全免费 · 公益驱动
+            </h3>
             <p className="text-xs leading-relaxed text-[#9aa0b0]">
               星幕由志愿者社区维护,无广告、无会员、无付费墙。所有内容仅接入原创、授权或公有领域片源,人人皆可自由观看。
             </p>
@@ -188,7 +229,9 @@ function ContinueWatching({
         <h2 className="flex items-center gap-3 font-serif text-xl font-bold text-white">
           <span className="h-5 w-1 rounded-full bg-[#e0142c]" />
           继续观看
-          <span className="text-sm font-normal text-[#9aa0b0]">本地保存 · 上次看到这里</span>
+          <span className="text-sm font-normal text-[#9aa0b0]">
+            本地保存 · 上次看到这里
+          </span>
         </h2>
         <button
           onClick={() => clearHistory()}
@@ -206,7 +249,7 @@ function ContinueWatching({
               aria-label={`继续播放${item.name} ${item.ep}`}
               onClick={() => onPlay(item.titleId, historyEpisode(item))}
               onKeyDown={(event) => {
-                if (event.key !== 'Enter' && event.key !== ' ') return
+                if (event.key !== "Enter" && event.key !== " ") return
                 event.preventDefault()
                 onPlay(item.titleId, historyEpisode(item))
               }}
@@ -234,7 +277,10 @@ function ContinueWatching({
                 ×
               </button>
               <div className="absolute inset-x-0 bottom-0 h-0.5 bg-white/15">
-                <div className="h-full bg-[#e0142c]" style={{ width: `${item.progress}%` }} />
+                <div
+                  className="h-full bg-[#e0142c]"
+                  style={{ width: `${item.progress}%` }}
+                />
               </div>
             </div>
             <p className="mt-1.5 truncate text-sm text-white">{item.name}</p>
@@ -266,8 +312,12 @@ function HeroBanner({
   inList: boolean
 }) {
   return (
-    <div className="relative overflow-hidden rounded-2xl ring-1 ring-white/8">
-      <Img src={hero.backdrop} alt={hero.name} className="h-[340px] w-full lg:h-[440px]" />
+    <div className="relative min-w-0 overflow-hidden rounded-2xl ring-1 ring-white/8">
+      <Img
+        src={hero.backdrop}
+        alt={hero.name}
+        className="h-[340px] w-full lg:h-[440px]"
+      />
       <div className="absolute inset-0 bg-gradient-to-r from-black via-black/55 to-transparent" />
       <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent" />
 
@@ -277,7 +327,9 @@ function HeroBanner({
             <span className="rounded bg-[#e0142c] px-2 py-0.5 text-xs font-bold text-white">
               {hero.quality}
             </span>
-            <span className="rounded bg-white/10 px-2 py-0.5 text-xs text-white/90">独家首播</span>
+            <span className="rounded bg-white/10 px-2 py-0.5 text-xs text-white/90">
+              独家首播
+            </span>
             <span className="flex items-center gap-0.5 text-sm font-bold text-[#e8b23a]">
               <IconStar className="h-3.5 w-3.5" /> {ratingLabel(hero)}
             </span>
@@ -285,12 +337,17 @@ function HeroBanner({
           <h1 className="font-serif text-4xl font-black leading-tight text-white drop-shadow-lg lg:text-6xl">
             {hero.name}
           </h1>
-          {hero.sub && <p className="mt-1 font-serif text-lg text-[#e8b23a] lg:text-2xl">{hero.sub}</p>}
+          {hero.sub && (
+            <p className="mt-1 font-serif text-lg text-[#e8b23a] lg:text-2xl">
+              {hero.sub}
+            </p>
+          )}
           <p className="mt-3 line-clamp-2 max-w-md text-sm leading-relaxed text-[#c9ccd6]">
             {hero.synopsis}
           </p>
           <p className="mt-2 text-xs text-[#9aa0b0]">
-            {hero.genres.join(' · ')} · {hero.region} · {hero.year} · {hero.latest}
+            {hero.genres.join(" · ")} · {hero.region} · {hero.year} ·{" "}
+            {hero.latest}
           </p>
 
           <div className="mt-5 flex items-center gap-3">
@@ -312,12 +369,16 @@ function HeroBanner({
               }
               className={`flex items-center gap-2 rounded-lg border px-5 py-2.5 font-medium backdrop-blur transition ${
                 inList
-                  ? 'border-[#e0142c]/50 bg-[#e0142c]/15 text-[#ff3b52]'
-                  : 'border-white/20 bg-white/5 text-white hover:bg-white/10'
+                  ? "border-[#e0142c]/50 bg-[#e0142c]/15 text-[#ff3b52]"
+                  : "border-white/20 bg-white/5 text-white hover:bg-white/10"
               }`}
             >
-              {inList ? <IconCheck className="h-5 w-5" /> : <IconPlus className="h-5 w-5" />}
-              {inList ? '已在片单' : '加入片单'}
+              {inList ? (
+                <IconCheck className="h-5 w-5" />
+              ) : (
+                <IconPlus className="h-5 w-5" />
+              )}
+              {inList ? "已在片单" : "加入片单"}
             </button>
           </div>
         </div>
@@ -329,7 +390,9 @@ function HeroBanner({
             key={i}
             onClick={() => setSlide(i)}
             className={`h-1.5 rounded-full transition-all ${
-              i === slide ? 'w-6 bg-[#e0142c]' : 'w-1.5 bg-white/40 hover:bg-white/70'
+              i === slide
+                ? "w-6 bg-[#e0142c]"
+                : "w-1.5 bg-white/40 hover:bg-white/70"
             }`}
           />
         ))}
@@ -357,7 +420,12 @@ function Row({
       <SectionHeader title={title} more onMore={onMore} />
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {items.slice(0, 6).map((t, i) => (
-          <PosterCard key={`${t.id}-${i}`} t={t} onOpen={onOpen} index={ranked ? i + 1 : undefined} />
+          <PosterCard
+            key={`${t.id}-${i}`}
+            t={t}
+            onOpen={onOpen}
+            index={ranked ? i + 1 : undefined}
+          />
         ))}
       </div>
     </section>

@@ -358,6 +358,26 @@ function firstSuccess<T>(ps: Promise<T>[]): Promise<T> {
       return false
     })
 
+  // 顶部导航/侧栏展示的大类,来自所选源真实返回的分类:
+  // 有 type_pid 层级时取顶层分类;扁平分类表按伞形启发式归到 电影/剧集/动漫/综艺/纪录片。
+  // 成人向类目不进导航与类型筛选。
+  const BLOCKED_CLASS = /伦理|成人|福利|午夜|里番/i
+  const topLevelClasses = (): CmsClass[] => {
+    if (!classes.length) return []
+    const isTop = (c: CmsClass) =>
+      c.type_pid == null || String(c.type_pid) === '' || String(c.type_pid) === '0'
+    if (classes.some((c) => c.type_pid != null)) {
+      const tops = classes.filter((c) => isTop(c) && !BLOCKED_CLASS.test(String(c.type_name)))
+      if (tops.length) return tops
+    }
+    const out: CmsClass[] = []
+    for (const cat of ['电影', '剧集', '动漫', '综艺', '纪录片']) {
+      const p = findSidebarParent(cat)
+      if (p && !BLOCKED_CLASS.test(String(p.type_name)) && !out.some((o) => String(o.type_id) === String(p.type_id))) out.push(p)
+    }
+    return out
+  }
+
   function sidebarTypeQueries(category?: string): TypeQuery[] {
     const cat = (category ?? '').trim()
     if (!cat || cat === '推荐' || cat === '首页' || cat === '经典重温') return [{ id: '_', name: '' }]
@@ -646,7 +666,13 @@ function firstSuccess<T>(ps: Promise<T>[]): Promise<T> {
     badge: 'TVBox',
     tagline: '多线路订阅 · 自动选择可用站点',
     online: true,
-    nav: NAV,
+    // 导航类别跟随所选源真实返回的分类;握手完成前回退到默认 NAV。
+    get nav() {
+      const tops = topLevelClasses()
+      if (!tops.length) return NAV
+      const names = [...new Set(tops.map((c) => String(c.type_name).trim()).filter(Boolean))]
+      return names.length ? ['首页', ...names, '我的片单'] : NAV
+    },
     subscribe(fn) {
       listeners.add(fn)
       return () => listeners.delete(fn)
@@ -658,7 +684,11 @@ function firstSuccess<T>(ps: Promise<T>[]): Promise<T> {
       // 分类接口比目录先拿到,把 class 名并入类型筛选项,条件查询才有完整选项。
       if (!classes.length) return base
       const genres = [
-        ...new Set([...base.genres, ...classes.map((c) => String(c.type_name).trim()).filter(Boolean)]),
+        ...new Set(
+          [...base.genres, ...classes.map((c) => String(c.type_name).trim())].filter(
+            (g) => g && !BLOCKED_CLASS.test(g),
+          ),
+        ),
       ]
       return { ...base, genres }
     },

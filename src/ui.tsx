@@ -17,7 +17,11 @@ import {
   VolumeX,
 } from 'lucide-react'
 import { ratingLabel, type PlaySource, type Title } from './data'
-import { resolveResumeSeconds, type PlaybackResumePoint } from './playbackProgress'
+import {
+  resolvePlaybackStart,
+  shouldSkipOutro,
+  type PlaybackResumePoint,
+} from './playbackProgress'
 
 // ---- Image with graceful fallback -----------------------------------------
 export function Img({
@@ -69,7 +73,10 @@ export const IconCrown = ({ className }: I) => <Crown className={className} fill
 // ---- Brand mark ------------------------------------------------------------
 export function Logo({ onClick }: { onClick?: () => void }) {
   return (
-    <button onClick={onClick} className="flex items-center gap-2 outline-none">
+    <button
+      onClick={onClick}
+      className="flex shrink-0 items-center gap-2 whitespace-nowrap outline-none"
+    >
       <span className="relative grid h-8 w-8 place-items-center">
         <svg viewBox="0 0 32 32" className="h-8 w-8">
           <circle cx="16" cy="16" r="14" fill="none" stroke="#e0142c" strokeWidth="2" opacity="0.6" />
@@ -232,12 +239,24 @@ export function VideoPlayer({
   sources,
   poster,
   resumePoint,
+  autoPlay = false,
+  showWaitingIndicator = true,
+  skipIntroSeconds = 0,
+  skipOutroSeconds = 0,
   onTime,
+  onEnded,
+  onSkipOutro,
 }: {
   sources: PlaySource[]
   poster: string
   resumePoint?: PlaybackResumePoint
+  autoPlay?: boolean
+  showWaitingIndicator?: boolean
+  skipIntroSeconds?: number
+  skipOutroSeconds?: number
   onTime?: (current: number, duration: number, force?: boolean) => void
+  onEnded?: () => void
+  onSkipOutro?: () => void
 }) {
   const wrapRef = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -275,11 +294,17 @@ export function VideoPlayer({
   // 切换清晰度时用于保留播放进度 / 播放状态。
   const resume = useRef<{ t: number; play: boolean } | null>(null)
   const initialResumeApplied = useRef(false)
+  const autoPlayApplied = useRef(false)
+  const outroHandled = useRef(false)
   const onTimeRef = useRef(onTime)
+  const onEndedRef = useRef(onEnded)
+  const onSkipOutroRef = useRef(onSkipOutro)
 
   useEffect(() => {
     onTimeRef.current = onTime
-  }, [onTime])
+    onEndedRef.current = onEnded
+    onSkipOutroRef.current = onSkipOutro
+  }, [onTime, onEnded, onSkipOutro])
 
   const sendDanmaku = () => {
     const text = dmText.trim()
@@ -349,6 +374,8 @@ export function VideoPlayer({
     setFailed(false)
     setWaiting(true)
     setVideoH(0)
+    autoPlayApplied.current = false
+    outroHandled.current = false
   }, [src])
 
   // 切换清晰度:记录当前进度,换 src 后在 loadedmetadata 时恢复。
@@ -387,18 +414,22 @@ export function VideoPlayer({
       }
       if (initialResumeApplied.current) return
 
-      const target = resolveResumeSeconds(resumePoint, mediaDuration)
+      const start = resolvePlaybackStart(resumePoint, mediaDuration, skipIntroSeconds)
       initialResumeApplied.current = true
-      if (!target) return
+      if (!start.seconds) return
       try {
-        video.currentTime = target
-        setCurrent(target)
-        showOsd(`已续播至 ${fmt(target)}`)
+        video.currentTime = start.seconds
+        setCurrent(start.seconds)
+        showOsd(
+          start.reason === 'intro'
+            ? `已跳过片头 ${fmt(start.seconds)}`
+            : `已续播至 ${fmt(start.seconds)}`,
+        )
       } catch {
         initialResumeApplied.current = false
       }
     },
-    [resumePoint, showOsd],
+    [resumePoint, showOsd, skipIntroSeconds],
   )
 
   // 页面隐藏、路由切换或刷新时强制保存最后位置。
@@ -621,10 +652,23 @@ export function VideoPlayer({
         onEnded={(e) => {
           setPlaying(false)
           onTimeRef.current?.(e.currentTarget.currentTime, e.currentTarget.duration, true)
+          onEndedRef.current?.()
         }}
         onTimeUpdate={(e) => {
           setCurrent(e.currentTarget.currentTime)
           onTimeRef.current?.(e.currentTarget.currentTime, e.currentTarget.duration)
+          if (
+            !outroHandled.current &&
+            onSkipOutroRef.current &&
+            shouldSkipOutro(
+              e.currentTarget.currentTime,
+              e.currentTarget.duration,
+              skipOutroSeconds,
+            )
+          ) {
+            outroHandled.current = true
+            onSkipOutroRef.current()
+          }
         }}
         onLoadedMetadata={(e) => applyResume(e.currentTarget)}
         onDurationChange={(e) => applyResume(e.currentTarget)}
@@ -633,6 +677,10 @@ export function VideoPlayer({
         onCanPlay={(e) => {
           applyResume(e.currentTarget)
           setWaiting(false)
+          if (autoPlay && !autoPlayApplied.current) {
+            autoPlayApplied.current = true
+            e.currentTarget.play().catch(() => {})
+          }
         }}
         onResize={(e) => setVideoH(e.currentTarget.videoHeight)}
         onError={() => {
@@ -673,7 +721,7 @@ export function VideoPlayer({
             视频加载失败,请稍后重试或切换清晰度。
           </div>
         </div>
-      ) : waiting ? (
+      ) : waiting && showWaitingIndicator ? (
         <div className="pointer-events-none absolute inset-0 grid place-items-center">
           <div className="h-11 w-11 animate-spin rounded-full border-2 border-white/20 border-t-[#e0142c]" />
         </div>

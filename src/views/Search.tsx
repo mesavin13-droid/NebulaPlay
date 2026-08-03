@@ -1,14 +1,15 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { Search as SearchIcon, TrendingUp, X } from 'lucide-react'
-import { ratingLabel, type Title, type VideoSource } from '../data'
-import { IconStar, Img, PosterCard } from '../ui'
+import { useEffect, useMemo, useRef, useState } from "react"
+import { Search as SearchIcon, TrendingUp, X } from "lucide-react"
+import { ratingLabel, type Title, type VideoSource } from "../data"
+import { PageLoading } from "../PageLoading"
+import { IconStar, Img, PosterCard } from "../ui"
 
-const RECENT_KEY = 'nebulaplay:searches:v1'
+const RECENT_KEY = "nebulaplay:searches:v1"
 
 function loadRecent(): string[] {
   try {
     const raw = localStorage.getItem(RECENT_KEY)
-    return raw ? (JSON.parse(raw) as string[]) : []
+    return raw ? JSON.parse(raw) as string[] : []
   } catch {
     return []
   }
@@ -53,11 +54,18 @@ export function Search({
 }) {
   const [draft, setDraft] = useState(query)
   const [recent, setRecent] = useState<string[]>(loadRecent)
-  const [remote, setRemote] = useState<Title[]>([])
-  const [searching, setSearching] = useState(false)
-  const [searchErr, setSearchErr] = useState<string | null>(null)
+  const [remoteState, setRemoteState] = useState<{
+    key: string
+    items: Title[]
+    error: string | null
+  }>({ key: "", items: [], error: null })
   const inputRef = useRef<HTMLInputElement>(null)
   const reqId = useRef(0)
+  const searchKey = `${source?.id ?? "local"}:${query.trim()}`
+  const shouldSearch = Boolean(query.trim() && source?.search)
+  const searching = shouldSearch && remoteState.key !== searchKey
+  const remote = remoteState.key === searchKey ? remoteState.items : []
+  const searchErr = remoteState.key === searchKey ? remoteState.error : null
 
   useEffect(() => setDraft(query), [query])
   useEffect(() => inputRef.current?.focus(), [])
@@ -66,37 +74,38 @@ export function Search({
   useEffect(() => {
     const q = query.trim()
     if (!q || !source?.search) {
-      setRemote([])
-      setSearching(false)
-      setSearchErr(null)
+      reqId.current += 1
+      setRemoteState({ key: searchKey, items: [], error: null })
       return
     }
     const id = ++reqId.current
-    setSearching(true)
-    setSearchErr(null)
     const timer = setTimeout(() => {
-      source
-        .search!(q)
+      source.search!(q)
         .then((list) => {
           if (id !== reqId.current) return
-          setRemote(list)
-          setSearching(false)
+          setRemoteState({ key: searchKey, items: list, error: null })
         })
         .catch((e) => {
           if (id !== reqId.current) return
-          setRemote([])
-          setSearching(false)
-          setSearchErr(e instanceof Error ? e.message : '搜索失败')
+          setRemoteState({
+            key: searchKey,
+            items: [],
+            error: e instanceof Error ? e.message : "搜索失败",
+          })
         })
     }, 280)
     return () => clearTimeout(timer)
-  }, [query, source])
+  }, [query, source, searchKey])
 
   // 热门搜索:从片库出现频次最高的类型里取几个,作为可点的建议词。
   const hot = useMemo(() => {
     const freq = new Map<string, number>()
-    for (const t of titles) for (const g of t.genres) freq.set(g, (freq.get(g) ?? 0) + 1)
-    return [...freq.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8).map(([g]) => g)
+    for (const t of titles)
+      for (const g of t.genres) freq.set(g, (freq.get(g) ?? 0) + 1)
+    return [...freq.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8)
+      .map(([g]) => g)
   }, [titles])
 
   const localResults = useMemo(() => {
@@ -115,14 +124,19 @@ export function Search({
     for (const t of remote) map.set(t.id, t)
     for (const t of localResults) if (!map.has(t.id)) map.set(t.id, t)
     const q = query.trim()
-    return [...map.values()].sort((a, b) => scoreOf(b, q) - scoreOf(a, q) || b.rating - a.rating)
+    return [...map.values()].sort(
+      (a, b) => scoreOf(b, q) - scoreOf(a, q) || b.rating - a.rating,
+    )
   }, [remote, localResults, query])
 
   const submit = (q: string) => {
     const trimmed = q.trim()
     onQueryChange(trimmed)
     if (trimmed) {
-      const next = [trimmed, ...recent.filter((r) => r !== trimmed)].slice(0, 10)
+      const next = [trimmed, ...recent.filter((r) => r !== trimmed)].slice(
+        0,
+        10,
+      )
       setRecent(next)
       saveRecent(next)
     }
@@ -156,8 +170,8 @@ export function Search({
           <button
             type="button"
             onClick={() => {
-              setDraft('')
-              onQueryChange('')
+              setDraft("")
+              onQueryChange("")
               inputRef.current?.focus()
             }}
             className="grid h-6 w-6 place-items-center rounded-full text-[#9aa0b0] transition hover:bg-white/10 hover:text-white"
@@ -179,7 +193,9 @@ export function Search({
           {recent.length > 0 && (
             <section>
               <div className="mb-3 flex items-center justify-between">
-                <h2 className="font-serif text-base font-bold text-white">搜索历史</h2>
+                <h2 className="font-serif text-base font-bold text-white">
+                  搜索历史
+                </h2>
                 <button
                   onClick={clearRecent}
                   className="text-xs text-[#5a5f70] transition hover:text-[#ff3b52]"
@@ -208,11 +224,12 @@ export function Search({
             </section>
           )}
         </div>
-      ) : searching && results.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24 text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/15 border-t-[#e0142c]" />
-          <p className="mt-4 text-sm text-[#9aa0b0]">正在全库搜索「{query}」…</p>
-        </div>
+      ) : searching ? (
+        <PageLoading
+          compact
+          label={`正在全库搜索「${query}」`}
+          detail="本地命中与远程结果合并完成后将一次展示"
+        />
       ) : results.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-center">
           <div className="grid h-14 w-14 place-items-center rounded-full bg-white/5 text-[#9aa0b0]">
@@ -222,7 +239,9 @@ export function Search({
             没有找到与「{query}」相关的影片
           </h2>
           <p className="mt-2 max-w-sm text-sm text-[#9aa0b0]">
-            {searchErr ? `远程搜索失败:${searchErr}` : '换个关键词试试,或从下方热门搜索里挑一个。'}
+            {searchErr
+              ? `远程搜索失败:${searchErr}`
+              : "换个关键词试试,或从下方热门搜索里挑一个。"}
           </p>
           {hot.length > 0 && (
             <div className="mt-5 flex flex-wrap justify-center gap-2">
@@ -235,9 +254,12 @@ export function Search({
       ) : (
         <div className="mt-6">
           <div className="mb-4 flex flex-wrap items-center gap-3">
-            <h2 className="font-serif text-lg font-bold text-white">「{query}」的搜索结果</h2>
-            <span className="text-sm text-[#5a5f70]">共 {results.length} 部</span>
-            {searching && <span className="text-xs text-[#9aa0b0]">全库搜索中…</span>}
+            <h2 className="font-serif text-lg font-bold text-white">
+              「{query}」的搜索结果
+            </h2>
+            <span className="text-sm text-[#5a5f70]">
+              共 {results.length} 部
+            </span>
             {source?.search && !searching && remote.length > 0 && (
               <span className="text-xs text-[#5a5f70]">含远程全库结果</span>
             )}
@@ -252,7 +274,9 @@ export function Search({
 
       {!active && (
         <section className="mt-10">
-          <h2 className="mb-3 font-serif text-base font-bold text-white">高分推荐</h2>
+          <h2 className="mb-3 font-serif text-base font-bold text-white">
+            高分推荐
+          </h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
             {[...titles]
               .sort((a, b) => b.rating - a.rating)
@@ -284,7 +308,7 @@ export function Search({
   )
 }
 
-function Tag({ label, onClick }: { label: string; onClick: () => void }) {
+function Tag({ label, onClick }: { label: string onClick: () => void }) {
   return (
     <button
       onClick={onClick}

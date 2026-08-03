@@ -5,8 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && pnpm build:server",
+    "build:server": "tsc -p tsconfig.server.json",
     "preview": "vite preview",
+    "start:proxy": "node dist-server/production.js",
     "format": "oxfmt",
     "test": "vitest run",
     "test:watch": "vitest"
@@ -15,7 +17,8 @@
     "hls.js": "^1.6.16",
     "lucide-react": "^1.27.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "undici": "8.9.0"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.0.0",
@@ -27,7 +30,6 @@
     "oxfmt": "^0.2.0",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.7.0",
-    "undici": "8.9.0",
     "vite": "^8.2.0",
     "vitest": "^4.1.10"
   }

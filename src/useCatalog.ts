@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
-import type { HistoryItem, RankItem, Title, VideoSource } from './data'
+import { useEffect, useState } from "react"
+import type { HistoryItem, RankItem, Title, VideoSource } from "./data"
 
-const CACHE_PREFIX = 'nebulaplay:catalog-cache:v1:'
+const CACHE_PREFIX = "nebulaplay:catalog-cache:v1:"
 const CACHE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000
 const CATALOG_TIMEOUT_MS = 20_000
 
@@ -13,9 +13,9 @@ export type Catalog = {
   byId: (id: string) => Title | undefined
 }
 
-type CatalogCache = Omit<Catalog, 'byId'> & { savedAt: number }
+type CatalogCache = Omit<Catalog, "byId"> & { savedAt: number }
 
-function materializeCatalog(data: Omit<Catalog, 'byId'>): Catalog {
+function materializeCatalog(data: Omit<Catalog, "byId">): Catalog {
   const map = new Map(data.titles.map((title) => [title.id, title]))
   return { ...data, byId: (id) => map.get(id) }
 }
@@ -77,23 +77,24 @@ async function loadCatalog(source: VideoSource): Promise<Catalog> {
 // 根据当前片源异步加载首屏所需的全部数据,并暴露 loading / error 状态。
 // 切换片源时会重新拉取 —— 视图只消费返回的 Catalog,不关心数据来源。
 export function useCatalog(source: VideoSource | null) {
-  const [catalog, setCatalog] = useState<Catalog | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [state, setState] = useState<{
+    sourceId: string | null
+    catalog: Catalog | null
+    loading: boolean
+    error: string | null
+  }>({ sourceId: null, catalog: null, loading: true, error: null })
 
   useEffect(() => {
     // 片源尚未就绪(探活中)时保持 loading,等真实片源出现再拉目录。
     if (!source) {
-      setCatalog(null)
-      setLoading(true)
-      setError(null)
+      setState({ sourceId: null, catalog: null, loading: true, error: null })
       return
     }
     let alive = true
     const cached = readCatalogCache(source.id)
-    setCatalog(cached)
-    setLoading(!cached)
-    setError(null)
+    // 缓存只作为网络失败后的兜底。刷新完成前不暴露旧目录,避免页面先渲染
+    // 上次结果,随后又被当前片源的新结果整体替换。
+    setState({ sourceId: source.id, catalog: null, loading: true, error: null })
     let timeout: ReturnType<typeof setTimeout> | null = null
     const deadline = new Promise<never>((_resolve, reject) => {
       timeout = setTimeout(
@@ -104,17 +105,29 @@ export function useCatalog(source: VideoSource | null) {
     Promise.race([loadCatalog(source), deadline])
       .then((next) => {
         if (!alive) return
-        setCatalog(next)
         writeCatalogCache(source.id, next)
-        setLoading(false)
+        setState({
+          sourceId: source.id,
+          catalog: next,
+          loading: false,
+          error: null,
+        })
       })
       .catch((e) => {
         if (!alive) return
         // 加载失败(常见于自定义源跨域受限):给出空目录 + 错误提示,而非白屏。
-        setError(e instanceof Error ? e.message : '片源加载失败')
-        if (!cached)
-          setCatalog({ titles: [], hero: undefined, ranking: [], history: [], byId: () => undefined })
-        setLoading(false)
+        setState({
+          sourceId: source.id,
+          catalog: cached ?? {
+            titles: [],
+            hero: undefined,
+            ranking: [],
+            history: [],
+            byId: () => undefined,
+          },
+          loading: false,
+          error: e instanceof Error ? e.message : "片源加载失败",
+        })
       })
       .finally(() => {
         if (timeout != null) clearTimeout(timeout)
@@ -133,8 +146,12 @@ export function useCatalog(source: VideoSource | null) {
       loadCatalog(source)
         .then((next) => {
           if (!alive) return
-          setCatalog(next)
           writeCatalogCache(source.id, next)
+          setState((current) =>
+            current.sourceId === source.id
+              ? { ...current, catalog: next }
+              : current,
+          )
         })
         .catch(() => {
           // 后台增量刷新失败不覆盖当前仍可用的 catalog；下一次事件继续重试。
@@ -146,5 +163,10 @@ export function useCatalog(source: VideoSource | null) {
     }
   }, [source])
 
-  return { catalog, loading, error }
+  const matchesSource = state.sourceId === (source?.id ?? null)
+  return {
+    catalog: matchesSource ? state.catalog : null,
+    loading: !source || !matchesSource || state.loading,
+    error: matchesSource ? state.error : null,
+  }
 }

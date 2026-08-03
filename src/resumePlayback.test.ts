@@ -157,4 +157,63 @@ describe('续播 UI 闭环', () => {
     act(() => video.dispatchEvent(new Event('pause', { bubbles: true })))
     expect(onTime).toHaveBeenCalledWith(250, 1_000, true)
   })
+
+  it('片头跳过只应用一次', () => {
+    act(() => {
+      root.render(
+        createElement(VideoPlayer, {
+          sources: [{ label: '1080P', url: 'https://example.com/video.mp4' }],
+          poster: '',
+          skipIntroSeconds: 90,
+        }),
+      )
+    })
+
+    const video = container.querySelector('video')!
+    Object.defineProperty(video, 'duration', { configurable: true, value: 1_000 })
+    Object.defineProperty(video, 'currentTime', {
+      configurable: true,
+      value: 0,
+      writable: true,
+    })
+
+    act(() => video.dispatchEvent(new Event('loadedmetadata', { bubbles: true })))
+    expect(video.currentTime).toBe(90)
+    expect(container.textContent).toContain('已跳过片头 01:30')
+
+    video.currentTime = 180
+    act(() => video.dispatchEvent(new Event('durationchange', { bubbles: true })))
+    expect(video.currentTime).toBe(180)
+  })
+
+  it('片尾窗口只触发一次，播放结束时通知下一集', () => {
+    const onSkipOutro = vi.fn()
+    const onEnded = vi.fn()
+    act(() => {
+      root.render(
+        createElement(VideoPlayer, {
+          sources: [{ label: '1080P', url: 'https://example.com/video.mp4' }],
+          poster: '',
+          skipOutroSeconds: 90,
+          onSkipOutro,
+          onEnded,
+        }),
+      )
+    })
+
+    const video = container.querySelector('video')!
+    Object.defineProperty(video, 'duration', { configurable: true, value: 1_000 })
+    Object.defineProperty(video, 'currentTime', {
+      configurable: true,
+      value: 910,
+      writable: true,
+    })
+
+    act(() => video.dispatchEvent(new Event('timeupdate', { bubbles: true })))
+    act(() => video.dispatchEvent(new Event('timeupdate', { bubbles: true })))
+    expect(onSkipOutro).toHaveBeenCalledTimes(1)
+
+    act(() => video.dispatchEvent(new Event('ended', { bubbles: true })))
+    expect(onEnded).toHaveBeenCalledTimes(1)
+  })
 })

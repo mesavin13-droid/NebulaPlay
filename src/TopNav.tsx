@@ -22,6 +22,9 @@ export function TopNav({
   onSearch: (q: string) => void
 }) {
   const [q, setQ] = useState('')
+  // 导航项跟随当前片源:远程源握手后返回真实 CMS 分类,未就绪时回退默认 NAV。
+  const current = sources.find((s) => s.id === currentSourceId)
+  const navItems = current?.nav?.length ? current.nav : NAV
   return (
     <header className="sticky top-0 z-40 border-b border-white/5 bg-[#07080d]/85 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-[1440px] items-center gap-4 px-4 lg:gap-6 lg:px-8">
@@ -34,12 +37,12 @@ export function TopNav({
           onManage={onManageSources}
         />
 
-        <nav className="hidden items-center gap-1 lg:flex">
-          {NAV.map((label) => (
+        <nav className="hidden min-w-0 flex-1 items-center gap-1 overflow-x-auto whitespace-nowrap [-ms-overflow-style:none] [scrollbar-width:none] lg:flex [&::-webkit-scrollbar]:hidden">
+          {navItems.map((label) => (
             <button
               key={label}
               onClick={() => onNav(label)}
-              className={`relative rounded px-3 py-2 text-[15px] transition ${
+              className={`relative shrink-0 rounded px-3 py-2 text-[15px] transition ${
                 active === label ? 'text-white' : 'text-[#9aa0b0] hover:text-white'
               }`}
             >
@@ -51,7 +54,7 @@ export function TopNav({
           ))}
         </nav>
 
-        <div className="ml-auto flex items-center gap-3">
+        <div className="ml-auto flex shrink-0 items-center gap-3">
           <form
             onSubmit={(e) => {
               e.preventDefault()
@@ -70,7 +73,7 @@ export function TopNav({
             />
           </form>
 
-          <span className="hidden items-center gap-1.5 rounded-full border border-[#3fbf6a]/30 bg-[#3fbf6a]/10 px-3 py-1.5 text-sm font-medium text-[#7fe3a3] sm:flex">
+          <span className="hidden items-center gap-1.5 whitespace-nowrap rounded-full border border-[#3fbf6a]/30 bg-[#3fbf6a]/10 px-3 py-1.5 text-sm font-medium text-[#7fe3a3] sm:flex">
             免费公益 · 无需登录
           </span>
 

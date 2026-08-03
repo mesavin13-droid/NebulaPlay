@@ -1,0 +1,32 @@
+[Unit]
+Description=NebulaPlay TVBox proxy
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=nebulaplay
+Group=www-data
+WorkingDirectory=/opt/nebulaplay/current
+Environment=NODE_ENV=production
+Environment=PROXY_HOST=127.0.0.1
+Environment=PROXY_PORT=8787
+Environment=TVBOX_PROXY_ALLOWED_HOSTS=nebu.life,www.nebu.life
+ExecStart=/usr/local/bin/node /opt/nebulaplay/current/dist-server/production.js
+Restart=on-failure
+RestartSec=5s
+TimeoutStopSec=45s
+UMask=0027
+NoNewPrivileges=true
+PrivateDevices=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+[Install]
+WantedBy=multi-user.target

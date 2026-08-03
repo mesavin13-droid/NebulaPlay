@@ -1,0 +1,8 @@
+{
+  "name": "nebulaplay-production-proxy",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "undici": "8.9.0"
+  }
+}
