@@ -1,0 +1,315 @@
+import { useEffect, useRef, useState } from 'react'
+import { ratingLabel, type PlaySource, type Title, type VideoSource } from '../data'
+import { getHistoryRecord, historyEpisode, recordHistory } from '../history'
+import type { Catalog } from '../useCatalog'
+import { IconChevron, IconPlay, IconStar, PosterCard, VideoPlayer } from '../ui'
+
+export function Player({
+  id,
+  ep,
+  source,
+  catalog,
+  onOpen,
+  onPlay,
+  onBack,
+}: {
+  id: string
+  ep: number
+  source: VideoSource
+  catalog?: Catalog
+  onOpen: (id: string) => void
+  onPlay: (id: string, ep: number) => void
+  onBack: () => void
+}) {
+  const [tab, setTab] = useState<'选集' | '简介' | '评论'>('选集')
+  const [sources, setSources] = useState<PlaySource[] | null>(null)
+  const [playError, setPlayError] = useState<string | null>(null)
+  const [playAttempt, setPlayAttempt] = useState(0)
+  const [detailLoading, setDetailLoading] = useState(true)
+  const [detailError, setDetailError] = useState<string | null>(null)
+  const [relOffset, setRelOffset] = useState(0)
+  // 在线片源(TVBox 等)列表数据不含集数,播放页同样拉一次完整详情。
+  const [fresh, setFresh] = useState<Title | null>(null)
+  const lastSaved = useRef(0)
+
+  const t = fresh ?? catalog?.byId(id)
+  const history = getHistoryRecord(source.id, id)
+  const resumePoint =
+    history && historyEpisode(history) === ep
+      ? { positionSeconds: history.positionSeconds, progress: history.progress }
+      : undefined
+
+  useEffect(() => {
+    lastSaved.current = 0
+  }, [source.id, id, ep])
+
+  useEffect(() => {
+    let alive = true
+    setFresh(null)
+    setDetailLoading(true)
+    setDetailError(null)
+    source
+      .loadDetail(id)
+      .then((detail) => alive && setFresh(detail ?? null))
+      .catch((error) => alive && setDetailError(error instanceof Error ? error.message : '详情加载失败'))
+      .finally(() => alive && setDetailLoading(false))
+    return () => {
+      alive = false
+    }
+  }, [source, id])
+
+  // 通过当前片源解析真实可播放地址(合法 / CC 授权),含多清晰度。
+  useEffect(() => {
+    let alive = true
+    setSources(null)
+    setPlayError(null)
+    source
+      .loadPlaySources(id, ep)
+      .then((list) => {
+        if (!alive) return
+        if (!list.length) throw new Error('没有可播放线路')
+        setSources(list)
+      })
+      .catch((error) => alive && setPlayError(error instanceof Error ? error.message : '播放线路加载失败'))
+    return () => {
+      alive = false
+    }
+  }, [source, id, ep, playAttempt])
+
+  if (!t && detailLoading) {
+    return (
+      <div className="mx-auto grid max-w-[1440px] place-items-center px-8 py-24">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/15 border-t-[#e0142c]" />
+      </div>
+    )
+  }
+  if (!t) {
+    return (
+      <p className="mx-auto max-w-[1440px] px-8 py-24 text-center text-[#9aa0b0]">
+        {detailError ?? '影片不存在。'}
+      </p>
+    )
+  }
+
+  const total = t.episodes
+  const isSeries = total > 1
+  const pool = (catalog?.titles ?? []).filter((x) => x.id !== t.id)
+  // 「换一批」:在同一批候选里轮换 8 部,避免洗牌造成的跳动。
+  const related = Array.from({ length: Math.min(8, pool.length) }, (_, i) => pool[(relOffset + i) % pool.length])
+
+  return (
+    <div className="mx-auto max-w-[1440px] px-4 pb-16 lg:px-8">
+      <div className="grid gap-4 pt-5 lg:grid-cols-[1fr_340px]">
+        <div>
+          {playError ? (
+            <div className="grid aspect-video place-items-center rounded-xl bg-black px-6 text-center ring-1 ring-[#e0142c]/25">
+              <div>
+                <p className="font-medium text-white">播放线路加载失败</p>
+                <p className="mt-2 text-sm text-[#9aa0b0]">{playError}</p>
+                <button
+                  onClick={() => setPlayAttempt((value) => value + 1)}
+                  className="mt-4 rounded-lg bg-[#e0142c] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#ff3b52]"
+                >
+                  重试
+                </button>
+              </div>
+            </div>
+          ) : sources ? (
+            <VideoPlayer
+              key={`${id}-${ep}`}
+              sources={sources}
+              poster={t.backdrop}
+              resumePoint={resumePoint}
+              onTime={(cur, dur, force) => {
+                if (!Number.isFinite(cur) || !Number.isFinite(dur) || dur <= 0 || cur < 1) return
+                const now = Date.now()
+                if (!force && now - lastSaved.current < 4000) return
+                lastSaved.current = now
+                recordHistory({
+                  sourceId: source.id,
+                  titleId: t.id,
+                  name: t.name,
+                  ep: isSeries ? `第 ${ep} 集` : t.latest,
+                  episode: ep,
+                  progress: Math.min(100, Math.round((cur / dur) * 100)),
+                  positionSeconds: Math.min(cur, dur),
+                  durationSeconds: dur,
+                  img: t.backdrop,
+                })
+              }}
+            />
+          ) : (
+            <div className="grid aspect-video place-items-center rounded-xl bg-black ring-1 ring-white/8">
+              <div className="h-11 w-11 animate-spin rounded-full border-2 border-white/20 border-t-[#e0142c]" />
+            </div>
+          )}
+
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <button onClick={onBack} className="text-sm text-[#9aa0b0] transition hover:text-white">
+              ← 返回
+            </button>
+            <h1 className="font-serif text-2xl font-bold text-white">
+              {t.name}
+              {t.sub && <span className="text-[#e8b23a]">：{t.sub}</span>}
+            </h1>
+            <span className="rounded bg-[#14161f] px-2 py-1 text-sm text-[#c9ccd6]">
+              {isSeries ? `第 ${ep} 集 · ${t.latest}` : t.latest}
+            </span>
+            <span className="flex items-center gap-1 text-sm font-bold text-[#e8b23a]">
+              <IconStar className="h-3.5 w-3.5" /> {ratingLabel(t)}
+            </span>
+            <button
+              onClick={() => onOpen(t.id)}
+              className="ml-auto text-sm text-[#9aa0b0] transition hover:text-[#ff3b52]"
+            >
+              查看详情 →
+            </button>
+          </div>
+
+          <div className="mt-4 flex gap-6 border-b border-white/6 text-sm">
+            {(['选集', '简介', '评论'] as const)
+              .filter((x) => x !== '选集' || isSeries)
+              .map((x) => (
+                <button
+                  key={x}
+                  onClick={() => setTab(x)}
+                  className={`relative pb-3 ${tab === x ? 'font-bold text-white' : 'text-[#9aa0b0]'}`}
+                >
+                  {x}
+                  {tab === x && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded bg-[#e0142c]" />}
+                </button>
+              ))}
+          </div>
+
+          <div className="mt-4">
+            {tab === '选集' && isSeries && (
+              <div className="grid grid-cols-6 gap-2 sm:grid-cols-8 lg:grid-cols-10">
+                {Array.from({ length: total }).map((_, i) => {
+                  const e = i + 1
+                  const aired = e <= t.airedEpisodes
+                  return (
+                    <button
+                      key={e}
+                      disabled={!aired}
+                      onClick={() => onPlay(t.id, e)}
+                      className={`rounded-md py-2 text-sm font-medium transition ${
+                        e === ep
+                          ? 'bg-[#e0142c] text-white'
+                          : aired
+                            ? 'bg-[#14161f] text-[#c9ccd6] hover:bg-white/10'
+                            : 'cursor-not-allowed bg-[#0e1018] text-[#3a3f52]'
+                      }`}
+                    >
+                      {e}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+            {(tab === '简介' || (tab === '选集' && !isSeries)) && (
+              <div>
+                <p className="text-sm leading-relaxed text-[#c9ccd6]">{t.synopsis}</p>
+                <p className="mt-3 text-xs text-[#5a5f70]">
+                  主演:{t.cast.join(' / ')} · {t.region} · {t.year}
+                </p>
+              </div>
+            )}
+            {tab === '评论' && <Comments />}
+          </div>
+        </div>
+
+        <aside className="flex flex-col gap-4">
+          {isSeries && (
+            <div className="rounded-xl border border-white/6 bg-[#0e1018]">
+              <div className="flex items-center justify-between border-b border-white/6 px-4 py-3">
+                <h3 className="font-serif text-base font-bold text-white">播放列表</h3>
+                <span className="text-xs text-[#5a5f70]">
+                  已更新 {t.airedEpisodes} / {total}
+                </span>
+              </div>
+              <ol className="no-scrollbar max-h-[360px] space-y-1 overflow-y-auto p-2">
+                {Array.from({ length: total }).map((_, i) => {
+                  const e = i + 1
+                  const aired = e <= t.airedEpisodes
+                  return (
+                    <li key={e}>
+                      <button
+                        disabled={!aired}
+                        onClick={() => onPlay(t.id, e)}
+                        className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition ${
+                          e === ep
+                            ? 'bg-[#e0142c]/15 text-[#ff3b52] ring-1 ring-[#e0142c]/30'
+                            : aired
+                              ? 'text-[#c9ccd6] hover:bg-white/5'
+                              : 'cursor-not-allowed text-[#3a3f52]'
+                        }`}
+                      >
+                        <span className="tabular-nums">{String(e).padStart(2, '0')}</span>
+                        <span className="flex-1 truncate">
+                          第 {e} 集 {e === ep ? '· 正在播放' : ''}
+                        </span>
+                        {e === ep && <IconPlay className="h-3.5 w-3.5" />}
+                        {!aired && <span className="text-[10px]">待更新</span>}
+                      </button>
+                    </li>
+                  )
+                })}
+              </ol>
+            </div>
+          )}
+
+          <div>
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="font-serif text-base font-bold text-white">猜你喜欢</h3>
+              <button
+                onClick={() => setRelOffset((o) => (o + 8) % Math.max(1, pool.length))}
+                className="flex items-center gap-1 text-xs text-[#9aa0b0] transition hover:text-[#ff3b52]"
+              >
+                换一批 <IconChevron className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {related.map((r) => (
+                <PosterCard key={r.id} t={r} onOpen={onOpen} />
+              ))}
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  )
+}
+
+function Comments() {
+  const list = [
+    { u: '夜航星', t: '今晚这集的转折真的封神,剧情节奏拿捏得死死的!', l: 328 },
+    { u: '苏晚粉', t: '女主的演技越来越稳了,赤月那场戏看哭我。', l: 194 },
+    { u: '刀客Ray', t: '4K 画质在这平台是真的免费看,公益站点良心。', l: 156 },
+  ]
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-3">
+        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#e0142c] to-[#7a0a18] text-sm font-bold text-white">
+          我
+        </div>
+        <input
+          placeholder="发一条友善的评论…"
+          className="flex-1 rounded-lg border border-white/8 bg-[#14161f] px-3 py-2 text-sm text-white placeholder:text-[#5a5f70] outline-none focus:border-[#e0142c]/50"
+        />
+        <button className="rounded-lg bg-[#e0142c] px-4 text-sm font-medium text-white">发送</button>
+      </div>
+      {list.map((c) => (
+        <div key={c.u} className="flex gap-3">
+          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#14161f] text-sm text-[#9aa0b0]">
+            {c.u[0]}
+          </div>
+          <div>
+            <p className="text-sm font-medium text-white">{c.u}</p>
+            <p className="mt-0.5 text-sm text-[#c9ccd6]">{c.t}</p>
+            <p className="mt-1 text-xs text-[#5a5f70]">❤️ {c.l} · 回复</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}

@@ -1,0 +1,87 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=Noto+Serif+SC:wght@600;700;900&family=Oswald:wght@500;600;700&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Noto Sans SC', system-ui, sans-serif;
+  --font-serif: 'Noto Serif SC', serif;
+  --font-display: 'Oswald', 'Noto Serif SC', sans-serif;
+
+  --color-ink: #07080d;
+  --color-panel: #0e1018;
+  --color-panel-2: #14161f;
+  --color-line: #232634;
+  --color-crimson: #e0142c;
+  --color-crimson-soft: #ff3b52;
+  --color-gold: #e8b23a;
+  --color-mist: #9aa0b0;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: #07080d;
+  color: #eef0f6;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Hide scrollbars until scrolling */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 999px;
+}
+*:hover::-webkit-scrollbar-thumb {
+  background: #2a2e3d;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+::selection {
+  background: rgba(224, 20, 44, 0.4);
+  color: #fff;
+}
+
+@keyframes marqueeGlow {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* 弹幕:从右侧屏外滑入,直到完全滑出左侧屏外(与容器 / 文字宽度无关) */
+@keyframes danmaku {
+  from {
+    left: 100%;
+    transform: translateX(0);
+  }
+  to {
+    left: 0%;
+    transform: translateX(-100%);
+  }
+}

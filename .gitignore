@@ -1,0 +1,17 @@
+# Dependencies and build output
+node_modules/
+dist/
+.pnpm-store/
+
+# Local environment
+.env
+.env.*
+!.env.example
+*.log
+
+# macOS
+.DS_Store
+
+# Local agent and analysis state
+.gstack/
+.codegraph/
