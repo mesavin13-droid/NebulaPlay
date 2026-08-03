@@ -15,3 +15,6 @@ dist/
 # Local agent and analysis state
 .gstack/
 .codegraph/
+
+# Figma Make local config
+.figma/
