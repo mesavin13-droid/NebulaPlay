@@ -3,6 +3,7 @@ import {
   cmsApiUrl,
   cmsClassesOf,
   cmsListData,
+  episodeCountFromRemarks,
   isBrowserCmsSite,
   mapCmsVod,
   parseCmsPlayGroups,
@@ -97,6 +98,40 @@ describe('mapCmsVod', () => {
     const t = mapCmsVod({ vod_id: 1, vod_year: 'abc', vod_score: '0' })!
     expect(t.year).toBe(new Date().getFullYear())
     expect(t.rating).toBe(7.5)
+  })
+
+  it('剧集优先采用 remarks 集数,推断不出时保留 99 占位', () => {
+    const drama = (vod_remarks: string) =>
+      mapCmsVod({ vod_id: 2, vod_name: '剧', vod_remarks, type_name: '大陆剧' })!
+    expect(drama('第14集')).toMatchObject({ episodes: 14, airedEpisodes: 14 })
+    expect(drama('更新至36集')).toMatchObject({ episodes: 36, airedEpisodes: 36 })
+    expect(drama('全40集')).toMatchObject({ episodes: 40, airedEpisodes: 40 })
+    expect(drama('26集全')).toMatchObject({ episodes: 26, airedEpisodes: 26 })
+    expect(drama('HD')).toMatchObject({ episodes: 99, airedEpisodes: 99 })
+    expect(drama('')).toMatchObject({ episodes: 99, airedEpisodes: 99 })
+  })
+
+  it('电影不受 remarks 集数影响', () => {
+    const t = mapCmsVod({ vod_id: 3, vod_name: '片', vod_remarks: '第14集', type_name: '电影' })!
+    expect(t).toMatchObject({ episodes: 1, airedEpisodes: 1 })
+  })
+})
+
+describe('episodeCountFromRemarks', () => {
+  it('识别常见集数写法', () => {
+    expect(episodeCountFromRemarks('第14集')).toEqual({ total: 14, aired: 14 })
+    expect(episodeCountFromRemarks('更新至14集')).toEqual({ total: 14, aired: 14 })
+    expect(episodeCountFromRemarks('全36集')).toEqual({ total: 36, aired: 36 })
+    expect(episodeCountFromRemarks('共108集')).toEqual({ total: 108, aired: 108 })
+    expect(episodeCountFromRemarks('12集全')).toEqual({ total: 12, aired: 12 })
+    expect(episodeCountFromRemarks('更新至08期')).toEqual({ total: 8, aired: 8 })
+  })
+
+  it('日期期数与无集数写法返回 null', () => {
+    expect(episodeCountFromRemarks('第20240801期')).toBeNull()
+    expect(episodeCountFromRemarks('HD')).toBeNull()
+    expect(episodeCountFromRemarks('1080P')).toBeNull()
+    expect(episodeCountFromRemarks('')).toBeNull()
   })
 })
 

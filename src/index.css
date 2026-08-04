@@ -34,6 +34,44 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Video.js 只负责媒体内核；NebulaPlay 保留自己的单套控制层。 */
+.nebula-videojs-host,
+.nebula-videojs-host .video-js,
+.nebula-videojs-host .vjs-tech {
+  width: 100%;
+  height: 100%;
+}
+
+.nebula-videojs-host .video-js {
+  position: absolute;
+  inset: 0;
+  background: #000;
+}
+
+.nebula-videojs-host .vjs-tech {
+  object-fit: contain;
+  transition: opacity 160ms ease;
+}
+
+.nebula-videojs-host .vjs-control-bar,
+.nebula-videojs-host .vjs-big-play-button,
+.nebula-videojs-host .vjs-loading-spinner,
+.nebula-videojs-host .vjs-error-display,
+.nebula-videojs-host .vjs-text-track-display {
+  display: none;
+}
+
+.nebula-videojs-host .vjs-poster {
+  background-size: contain;
+  pointer-events: none;
+}
+
+/* 不用 display:none 隐藏 video，否则浏览器会停掉帧回调和 WebGPU 拷贝。 */
+.nebula-videojs-enhanced .vjs-tech,
+.nebula-videojs-enhanced .vjs-poster {
+  opacity: 0;
+}
+
 /* Hide scrollbars until scrolling */
 * {
   scrollbar-width: thin;

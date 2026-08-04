@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react"
-import { SkipForward } from "lucide-react"
 import {
   ratingLabel,
   type PlaySource,
@@ -237,9 +236,14 @@ export function Player({
                 key={`${id}-${playback.episodeKey}`}
                 sources={playback.sources}
                 poster={t.backdrop}
+                title={
+                  isSeries ? `${t.name} 第 ${playback.episode} 集` : t.name
+                }
                 resumePoint={resumePoint}
                 autoPlay={playback.seamless}
                 showWaitingIndicator={!playback.seamless}
+                hasNextEpisode={activeNextEpisode !== null}
+                preferences={preferences}
                 skipIntroSeconds={
                   preferences.skipIntro ? preferences.introSeconds : 0
                 }
@@ -258,6 +262,8 @@ export function Player({
                     ? playNext
                     : undefined
                 }
+                onNextEpisode={activeNextEpisode ? playNext : undefined}
+                onPreferencesChange={updatePreferences}
                 onTime={(cur, dur, force) => {
                   if (
                     !Number.isFinite(cur) ||
@@ -314,8 +320,6 @@ export function Player({
               查看详情 →
             </button>
           </div>
-
-          <PlaybackControls value={preferences} onChange={updatePreferences} />
 
           <div className="mt-4 flex gap-6 border-b border-white/6 text-sm">
             {(["选集", "简介", "评论"] as const)
@@ -454,117 +458,6 @@ export function Player({
         </aside>
       </div>
     </div>
-  )
-}
-
-function PlaybackControls({
-  value,
-  onChange,
-}: {
-  value: PlaybackPreferences
-  onChange: (patch: Partial<PlaybackPreferences>) => void
-}) {
-  return (
-    <div
-      className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-3 border-y border-white/6 py-3"
-      role="group"
-      aria-label="连续播放设置"
-    >
-      <span className="inline-flex items-center gap-2 text-xs font-medium text-[#c9ccd6]">
-        <SkipForward className="h-4 w-4 text-[#ff3b52]" aria-hidden="true" />
-        连续播放
-      </span>
-      <SwitchControl
-        label="自动下一集"
-        checked={value.autoNext}
-        onChange={(checked) => onChange({ autoNext: checked })}
-      />
-      <SwitchControl
-        label="跳过片头"
-        checked={value.skipIntro}
-        onChange={(checked) => onChange({ skipIntro: checked })}
-      />
-      {value.skipIntro && (
-        <SecondsField
-          label="片头时长"
-          value={value.introSeconds}
-          onChange={(introSeconds) => onChange({ introSeconds })}
-        />
-      )}
-      <SwitchControl
-        label="跳过片尾"
-        checked={value.skipOutro}
-        onChange={(checked) => onChange({ skipOutro: checked })}
-      />
-      {value.skipOutro && (
-        <SecondsField
-          label="片尾时长"
-          value={value.outroSeconds}
-          onChange={(outroSeconds) => onChange({ outroSeconds })}
-        />
-      )}
-    </div>
-  )
-}
-
-function SwitchControl({
-  label,
-  checked,
-  onChange,
-}: {
-  label: string
-  checked: boolean
-  onChange: (checked: boolean) => void
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      onClick={() => onChange(!checked)}
-      className="inline-flex items-center gap-2 text-xs text-[#9aa0b0] transition hover:text-white"
-    >
-      <span
-        className={`relative h-4 w-7 rounded-full transition ${
-          checked ? "bg-[#e0142c]" : "bg-white/15"
-        }`}
-        aria-hidden="true"
-      >
-        <span
-          className={`absolute top-0.5 h-3 w-3 rounded-full bg-white shadow transition ${
-            checked ? "left-3.5" : "left-0.5"
-          }`}
-        />
-      </span>
-      {label}
-    </button>
-  )
-}
-
-function SecondsField({
-  label,
-  value,
-  onChange,
-}: {
-  label: string
-  value: number
-  onChange: (value: number) => void
-}) {
-  return (
-    <label className="inline-flex items-center gap-1.5 text-xs text-[#5a5f70]">
-      <span className="sr-only">{label}</span>
-      <input
-        aria-label={label}
-        type="number"
-        min={0}
-        max={600}
-        step={5}
-        value={value}
-        onChange={(event) => onChange(Number(event.target.value))}
-        className="h-7 w-14 rounded-md border border-white/10 bg-[#14161f] px-2 text-center text-xs tabular-nums text-white outline-none focus:border-[#e0142c]/60"
-      />
-      秒
-    </label>
   )
 }
 

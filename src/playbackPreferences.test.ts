@@ -13,6 +13,7 @@ describe('连续播放偏好', () => {
   it('默认开启自动下一集，片头片尾跳过由用户主动开启', () => {
     expect(loadPlaybackPreferences()).toEqual({
       autoNext: true,
+      loop: false,
       skipIntro: false,
       introSeconds: 90,
       skipOutro: false,

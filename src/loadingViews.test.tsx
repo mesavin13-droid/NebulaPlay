@@ -299,7 +299,7 @@ describe("页面数据完整加载态", () => {
 
     expect(container.querySelector('[role="status"]')).toBeNull()
     expect(container.textContent).not.toContain("正在切换至第 2 集")
-    expect(container.querySelector("video")?.getAttribute("src")).toContain(
+    expect(container.querySelector("[data-source-url]")?.getAttribute("data-source-url")).toContain(
       "two.mp4",
     )
   })

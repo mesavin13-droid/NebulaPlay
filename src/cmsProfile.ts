@@ -139,6 +139,32 @@ export type CmsVodMappingOptions = {
   posterUrl?: (u: string) => string
 }
 
+// ---- vod_remarks 集数推断 ----------------------------------------------------
+// 列表接口不带播放地址,只能凭 remarks 估计集数。常见写法:
+// 「全36集」「36集全」「共36集」→ 已完结;「更新至14集」「第14集」→ 更新到 14。
+// 综艺的「第20240801期」是日期不是集数,只收 1-3 位数字的「期」。
+// 推断不出时返回 null,由调用方决定兜底值;详情接口的真实播放分组会再覆盖。
+export function episodeCountFromRemarks(
+  remarks: string,
+): { total: number; aired: number } | null {
+  const s = remarks.trim()
+  if (!s) return null
+  let m = /(?:全|共)\s*(\d{1,4})\s*集/.exec(s) ?? /(\d{1,4})\s*集\s*全/.exec(s)
+  if (m) {
+    const n = Number(m[1])
+    return n > 0 ? { total: n, aired: n } : null
+  }
+  m =
+    /(?:更新[至到]?|第)\s*(\d{1,4})\s*集/.exec(s) ??
+    /(\d{1,4})\s*集/.exec(s) ??
+    /(?:更新[至到]?|第)\s*(\d{1,3})\s*期/.exec(s)
+  if (m) {
+    const n = Number(m[1])
+    return n > 0 ? { total: n, aired: n } : null
+  }
+  return null
+}
+
 // 把一条 vod 记录映射为站内 Title;列表接口没有播放地址,集数在详情接口补齐。
 export function mapCmsVod(v: CmsVod, opts: CmsVodMappingOptions = {}): Title | null {
   if (!v || v.vod_id == null) return null
@@ -150,6 +176,13 @@ export function mapCmsVod(v: CmsVod, opts: CmsVodMappingOptions = {}): Title | n
   const score = Number(v.vod_score)
   const pic = absUrl(v.vod_pic)
   const poster = pic ? posterUrl(pic) : ''
+  const isSeries =
+    /剧$/.test(typeName) ||
+    /动漫/.test(typeName) ||
+    typeName === '综艺' ||
+    typeName === '连续剧'
+  // 能从 remarks 推断就用真实集数;推断不出时剧集仍给 99 占位,等详情接口纠正。
+  const counts = isSeries ? episodeCountFromRemarks(remarks) : null
   return {
     id: `v${v.vod_id}`,
     name: String(v.vod_name ?? '未命名'),
@@ -160,8 +193,8 @@ export function mapCmsVod(v: CmsVod, opts: CmsVodMappingOptions = {}): Title | n
     genres: v.type_name ? [String(v.type_name)] : ['其他'],
     region: String(v.vod_area ?? '').trim() || '未知',
     quality,
-    episodes: /剧$/.test(typeName) || /动漫/.test(typeName) || typeName === '综艺' || typeName === '连续剧' ? 99 : 1,
-    airedEpisodes: /剧$/.test(typeName) || /动漫/.test(typeName) || typeName === '综艺' || typeName === '连续剧' ? 99 : 1,
+    episodes: isSeries ? (counts?.total ?? 99) : 1,
+    airedEpisodes: isSeries ? (counts?.aired ?? 99) : 1,
     latest: remarks || '正片',
     synopsis: stripHtml(String(v.vod_content ?? v.vod_blurb ?? '')) || '暂无简介。',
     cast: String(v.vod_actor ?? '')

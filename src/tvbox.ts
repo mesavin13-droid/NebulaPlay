@@ -50,11 +50,11 @@ export const viaProxy = (u: string) => PROXY_BASE + encodeURIComponent(u)
 const wrapPlayUrl = (u: string) => (/\.(mp4|webm|m4v|mov)($|[?#])/i.test(u) ? u : viaProxy(u))
 
 // 部分「播放页」地址(hhyun 等)其实是 HTML 播放器页,真实流在 <url>/index.m3u8。
-const normalizePlayUrl = (u: string): string => {
+export const normalizePlayUrl = (u: string): string => {
   try {
     const url = new URL(u)
     if (
-      /^play\.(hhuus|hhdx)\.com$/.test(url.hostname) &&
+      /^play\.(hhuus|hhdx|xluuss)\.com$/.test(url.hostname) &&
       url.pathname.startsWith('/play/') &&
       !/\.m3u8$/i.test(url.pathname)
     ) {

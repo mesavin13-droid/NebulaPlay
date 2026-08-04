@@ -2,6 +2,7 @@ export const PLAYBACK_PREFERENCES_KEY = "nebulaplay:playback-preferences:v1"
 
 export type PlaybackPreferences = {
   autoNext: boolean
+  loop: boolean
   skipIntro: boolean
   introSeconds: number
   skipOutro: boolean
@@ -10,6 +11,7 @@ export type PlaybackPreferences = {
 
 export const DEFAULT_PLAYBACK_PREFERENCES: PlaybackPreferences = {
   autoNext: true,
+  loop: false,
   skipIntro: false,
   introSeconds: 90,
   skipOutro: false,
@@ -35,6 +37,10 @@ export function normalizePlaybackPreferences(
       typeof input.autoNext === "boolean"
         ? input.autoNext
         : DEFAULT_PLAYBACK_PREFERENCES.autoNext,
+    loop:
+      typeof input.loop === "boolean"
+        ? input.loop
+        : DEFAULT_PLAYBACK_PREFERENCES.loop,
     skipIntro:
       typeof input.skipIntro === "boolean"
         ? input.skipIntro

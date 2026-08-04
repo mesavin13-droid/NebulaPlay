@@ -1,5 +1,24 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { makeTvboxLineSource } from './tvbox'
+import { makeTvboxLineSource, normalizePlayUrl } from './tvbox'
+
+describe('normalizePlayUrl', () => {
+  it('turns supported yun player pages into direct HLS manifests', () => {
+    expect(normalizePlayUrl('https://play.xluuss.com/play/aM8JyG1e')).toBe(
+      'https://play.xluuss.com/play/aM8JyG1e/index.m3u8',
+    )
+    expect(normalizePlayUrl('https://play.hhuus.com/play/demo/')).toBe(
+      'https://play.hhuus.com/play/demo/index.m3u8',
+    )
+  })
+
+  it('keeps direct manifests and unrelated pages unchanged', () => {
+    const manifest = 'https://play.xluuss.com/play/demo/index.m3u8'
+    expect(normalizePlayUrl(manifest)).toBe(manifest)
+    expect(normalizePlayUrl('https://example.com/watch/demo')).toBe(
+      'https://example.com/watch/demo',
+    )
+  })
+})
 
 // ---- 假苹果 CMS ------------------------------------------------------------
 type Vod = {

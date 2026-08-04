@@ -1,27 +1,49 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
-import Hls from 'hls.js'
+import videojs from 'video.js'
+import type Player from 'video.js/dist/types/player'
+import 'video.js/dist/video-js.css'
 import {
   Check,
   ChevronRight,
   Crown,
+  Expand,
   Film,
   Heart,
   Maximize,
   Pause,
+  PictureInPicture2,
   Play,
   Plus,
   Search,
+  Settings,
   Share2,
+  SkipForward,
+  Sparkles,
   Star,
   Volume2,
   VolumeX,
 } from 'lucide-react'
+import {
+  isAnime4KSupported,
+  startAnime4K,
+  type Anime4KHandle,
+} from './anime4kEnhancer'
 import { ratingLabel, type PlaySource, type Title } from './data'
+import {
+  DEFAULT_PLAYBACK_PREFERENCES,
+  type PlaybackPreferences,
+} from './playbackPreferences'
 import {
   resolvePlaybackStart,
   shouldSkipOutro,
   type PlaybackResumePoint,
 } from './playbackProgress'
+import {
+  qualityLevelsOf,
+  selectVideoJsQuality,
+  videoElementOf,
+  videoJsSource,
+} from './videoJsAdapter'
 
 // ---- Image with graceful fallback -----------------------------------------
 export function Img({
@@ -238,28 +260,41 @@ type Danmaku = { id: number; text: string; top: number; dur: number }
 export function VideoPlayer({
   sources,
   poster,
+  title,
   resumePoint,
   autoPlay = false,
   showWaitingIndicator = true,
   skipIntroSeconds = 0,
   skipOutroSeconds = 0,
+  hasNextEpisode = false,
+  preferences = DEFAULT_PLAYBACK_PREFERENCES,
   onTime,
   onEnded,
   onSkipOutro,
+  onNextEpisode,
+  onPreferencesChange,
 }: {
   sources: PlaySource[]
   poster: string
+  title?: string
   resumePoint?: PlaybackResumePoint
   autoPlay?: boolean
   showWaitingIndicator?: boolean
   skipIntroSeconds?: number
   skipOutroSeconds?: number
+  hasNextEpisode?: boolean
+  preferences?: PlaybackPreferences
   onTime?: (current: number, duration: number, force?: boolean) => void
   onEnded?: () => void
   onSkipOutro?: () => void
+  onNextEpisode?: () => void
+  onPreferencesChange?: (patch: Partial<PlaybackPreferences>) => void
 }) {
   const wrapRef = useRef<HTMLDivElement>(null)
+  const videoHostRef = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
+  const playerRef = useRef<Player | null>(null)
+  const enhanceCanvasRef = useRef<HTMLCanvasElement>(null)
   const barRef = useRef<HTMLDivElement>(null)
   const [playing, setPlaying] = useState(false)
   const [current, setCurrent] = useState(0)
@@ -277,14 +312,18 @@ export function VideoPlayer({
   const [showUI, setShowUI] = useState(true)
   const [fs, setFs] = useState(false)
   const [webFull, setWebFull] = useState(false) // 网页全屏(iframe 内原生全屏常被禁用时的兜底)
+  const [iosNativeFs, setIosNativeFs] = useState(false) // iOS 原生视频全屏
   const [qi, setQi] = useState(0)
+  const [playerReady, setPlayerReady] = useState(false)
+  // Anime4K 画质增强:idle → starting → on;失败回落 off 并提示。
+  const [enhance, setEnhance] = useState<"off" | "starting" | "on">("off")
+  const enhanceHandle = useRef<Anime4KHandle | null>(null)
   // HLS 多码率:MANIFEST_PARSED 后填充;LEVEL_SWITCHED 跟踪自动档实际切到的码率。
   const [levels, setLevels] = useState<{ i: number; label: string }[]>([])
   const [level, setLevel] = useState(-1) // -1 = 自动
   const [autoLevel, setAutoLevel] = useState(-1) // 自动模式下当前实际播放的码率档
   // 单码率流 playlist 不带 RESOLUTION:起播后从 video 元素读真实分辨率做标签。
   const [videoH, setVideoH] = useState(0)
-  const hlsRef = useRef<Hls | null>(null)
   const [danmaku, setDanmaku] = useState<Danmaku[]>([])
   const [dmOn, setDmOn] = useState(true)
   const [dmText, setDmText] = useState('')
@@ -321,43 +360,6 @@ export function VideoPlayer({
   const list = sources?.length ? sources : [{ label: '标清', url: '' }]
   const safeQi = Math.min(qi, list.length - 1)
   const src = list[safeQi]?.url ?? ''
-  // m3u8 (HLS) 播放:Chrome 等经 hls.js 走 MSE;Safari 原生支持,直接吃 src。
-  // TVBox 的 m3u8 已被包成 /__tvbox?u=… 同源代理地址,其中仍含 ".m3u8" 字样。
-  const isHls = /\.m3u8/i.test(src)
-  const useMse = isHls && Hls.isSupported()
-
-  useEffect(() => {
-    if (!useMse) return
-    const v = videoRef.current
-    if (!v) return
-    const hls = new Hls({ maxMaxBufferLength: 60, fragLoadingMaxRetry: 4, manifestLoadingMaxRetry: 2 })
-    hlsRef.current = hls
-    hls.loadSource(src)
-    hls.attachMedia(v)
-    hls.on(Hls.Events.MANIFEST_PARSED, () => {
-      setLevels(
-        hls.levels.map((l, i) => ({
-          i,
-          label: qualityLabel(l.height, l.bitrate),
-        })),
-      )
-      setLevel(-1)
-    })
-    hls.on(Hls.Events.LEVEL_SWITCHED, (_evt, data) => setAutoLevel(data.level))
-    hls.on(Hls.Events.ERROR, (_evt, data) => {
-      if (!data.fatal) return
-      // 网络 / 媒体错误先自愈,只有解码级致命错误才展示失败态。
-      if (data.type === Hls.ErrorTypes.NETWORK_ERROR) hls.startLoad()
-      else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError()
-      else setFailed(true)
-    })
-    return () => {
-      hls.destroy()
-      hlsRef.current = null
-      setLevels([])
-      setAutoLevel(-1)
-    }
-  }, [src, useMse])
 
   // sources 变化(换片/换集)时回到最高清晰度并重置状态。
   useEffect(() => {
@@ -377,6 +379,61 @@ export function VideoPlayer({
     autoPlayApplied.current = false
     outroHandled.current = false
   }, [src])
+
+  // Anime4K 增强:开启且源就绪时启动;换源重建,卸载/关闭时销毁 GPU 资源。
+  useEffect(() => {
+    if (enhance === "off") return
+    const video = videoRef.current
+    const canvas = enhanceCanvasRef.current
+    if (!video || !canvas) return
+    let alive = true
+    startAnime4K(video, canvas)
+      .then((handle) => {
+        if (!alive) {
+          handle.stop()
+          return
+        }
+        enhanceHandle.current = handle
+        handle.onFatal = (error) => {
+          setEnhance("off")
+          const reason = error instanceof Error ? error.message : ""
+          showOsd(
+            reason.includes("GPU 无法流畅")
+              ? "设备性能不足，已自动关闭画质增强"
+              : "画质增强已关闭:视频源不支持 WebGPU 处理",
+          )
+        }
+        setEnhance("on")
+        showOsd("画质增强已开启")
+      })
+      .catch(() => {
+        if (!alive) return
+        setEnhance("off")
+        showOsd("当前浏览器不支持 WebGPU 画质增强")
+      })
+    return () => {
+      alive = false
+      enhanceHandle.current?.stop()
+      enhanceHandle.current = null
+    }
+    // 换源(切清晰度/换集)时按新流重建管线;关闭时走 cleanup 销毁。
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enhance !== "off", playerReady, src])
+
+  const toggleEnhance = () => {
+    if (enhance === "off") {
+      if (!isAnime4KSupported()) {
+        showOsd("当前浏览器不支持 WebGPU 画质增强")
+        return
+      }
+      setEnhance("starting")
+    } else {
+      enhanceHandle.current?.stop()
+      enhanceHandle.current = null
+      setEnhance("off")
+      showOsd("画质增强已关闭")
+    }
+  }
 
   // 切换清晰度:记录当前进度,换 src 后在 loadedmetadata 时恢复。
   const changeQuality = (i: number) => {
@@ -563,11 +620,19 @@ export function VideoPlayer({
     setShowUI(true)
     if (hideTimer.current) clearTimeout(hideTimer.current)
     hideTimer.current = setTimeout(() => setShowUI(false), 2600)
-  }, [])
+  }, [playerReady])
 
   const toggleFs = async () => {
     const el = wrapRef.current
-    if (!el) return
+    const video = videoRef.current as (HTMLVideoElement & {
+      webkitEnterFullscreen?: () => void
+      webkitExitFullscreen?: () => void
+    }) | null
+    if (!el || !video) return
+    if (iosNativeFs) {
+      video.webkitExitFullscreen?.()
+      return
+    }
     if (document.fullscreenElement) {
       document.exitFullscreen?.()
       return
@@ -576,18 +641,51 @@ export function VideoPlayer({
       setWebFull(false)
       return
     }
+    // iOS Safari 不支持容器全屏,退回 video 原生全屏(系统播放器接管)。
+    if (!el.requestFullscreen && video.webkitEnterFullscreen) {
+      video.webkitEnterFullscreen()
+      return
+    }
     // 优先尝试原生全屏;在 iframe(预览环境)里常被策略禁用 → 退回网页全屏。
     try {
       await el.requestFullscreen()
+      // 触屏设备全屏后顺手锁横屏;桌面/未授权时静默忽略。
+      if (window.matchMedia?.("(pointer: coarse)").matches) {
+        await screen.orientation?.lock?.("landscape").catch(() => {})
+      }
     } catch {
       setWebFull(true)
     }
   }
 
   useEffect(() => {
-    const onFs = () => setFs(!!document.fullscreenElement)
+    const onFs = () => {
+      const on = !!document.fullscreenElement
+      setFs(on)
+      if (!on) {
+        try {
+          screen.orientation?.unlock?.()
+        } catch {
+          /* 未锁定时调用抛错,忽略 */
+        }
+      }
+    }
     document.addEventListener('fullscreenchange', onFs)
     return () => document.removeEventListener('fullscreenchange', onFs)
+  }, [])
+
+  // iOS 原生全屏走自己的事件,不触发 fullscreenchange。
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+    const begin = () => setIosNativeFs(true)
+    const end = () => setIosNativeFs(false)
+    video.addEventListener("webkitbeginfullscreen", begin)
+    video.addEventListener("webkitendfullscreen", end)
+    return () => {
+      video.removeEventListener("webkitbeginfullscreen", begin)
+      video.removeEventListener("webkitendfullscreen", end)
+    }
   }, [])
 
   // 网页全屏下按 Esc 退出。
@@ -601,13 +699,264 @@ export function VideoPlayer({
   }, [webFull])
 
   useEffect(() => {
-    const v = videoRef.current
-    if (v) {
-      v.volume = volume
-      v.muted = muted
-      v.playbackRate = rate
+    const player = playerRef.current
+    if (!player || player.isDisposed()) return
+    player.volume(volume)
+    player.muted(muted)
+    player.playbackRate(rate)
+  }, [playerReady, volume, muted, rate])
+
+  // 触屏设备:单击视频切换控制栏(桌面仍是单击播放/暂停)。
+  const isCoarse = useRef(
+    typeof window !== "undefined" &&
+      (window.matchMedia?.("(pointer: coarse)").matches ?? false),
+  )
+  const onVideoTap = () => {
+    if (!isCoarse.current) {
+      toggle()
+      return
     }
-  }, [volume, muted, rate])
+    if (showUI && playing) setShowUI(false)
+    else nudgeUI()
+  }
+
+  // 桌面悬停进度条时的时间预览(拖动时仍用 scrub)。
+  const [hoverT, setHoverT] = useState<number | null>(null)
+  const onBarHover = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType !== "mouse" || !duration) return
+    setHoverT(barTime(e.clientX))
+  }
+
+  // 画中画:特性检测一次即可。
+  const [pipSupported] = useState(
+    () =>
+      typeof document !== "undefined" &&
+      "pictureInPictureEnabled" in document &&
+      document.pictureInPictureEnabled,
+  )
+  const togglePip = async () => {
+    const v = videoRef.current
+    if (!v) return
+    try {
+      if (document.pictureInPictureElement)
+        await document.exitPictureInPicture()
+      else await v.requestPictureInPicture()
+    } catch {
+      showOsd("画中画不可用")
+    }
+  }
+
+  // Video.js 只初始化一次。元素在 effect 内创建,避免 React StrictMode
+  // 重复挂载时与 Video.js 的 DOM 托管发生冲突。
+  useEffect(() => {
+    const host = videoHostRef.current
+    if (!host || playerRef.current) return
+    const videoElement = document.createElement('video-js')
+    videoElement.classList.add('nebula-videojs')
+    videoElement.setAttribute('playsinline', '')
+    host.appendChild(videoElement)
+
+    const player = videojs(videoElement, {
+      controls: false,
+      autoplay: false,
+      preload: 'auto',
+      fill: true,
+      playsinline: true,
+      nativeControlsForTouch: false,
+      html5: {
+        vhs: {
+          overrideNative: !videojs.browser.IS_SAFARI,
+          useBandwidthFromLocalStorage: true,
+          limitRenditionByPlayerDimensions: true,
+          useDevicePixelRatio: true,
+          usePlayerObjectFit: true,
+        },
+      },
+      userActions: {
+        click: false,
+        doubleClick: false,
+        hotkeys: false,
+      },
+    })
+    playerRef.current = player
+    videoRef.current = videoElementOf(player)
+    setPlayerReady(true)
+    player.ready(() => {
+      if (player.isDisposed()) return
+      videoRef.current = videoElementOf(player)
+    })
+
+    return () => {
+      setPlayerReady(false)
+      videoRef.current = null
+      if (!player.isDisposed()) player.dispose()
+      playerRef.current = null
+    }
+  }, [])
+
+  // 换集/换清晰度只更换 Video.js source;VHS 自行重置 ABR 与缓冲。
+  useEffect(() => {
+    const player = playerRef.current
+    if (!playerReady || !player || player.isDisposed() || !src) return
+    setLevels([])
+    setLevel(-1)
+    setAutoLevel(-1)
+    player.error(null)
+    player.src(videoJsSource(src))
+    videoRef.current = videoElementOf(player)
+  }, [playerReady, src])
+
+  useEffect(() => {
+    const player = playerRef.current
+    if (!playerReady || !player || player.isDisposed()) return
+    player.poster(poster)
+  }, [playerReady, poster])
+
+  // Video.js 管理源与 VHS;NebulaPlay 业务状态监听其底层 media element。
+  useEffect(() => {
+    const player = playerRef.current
+    if (!playerReady || !player || player.isDisposed()) return
+
+    let boundQualityList: ReturnType<typeof qualityLevelsOf> = null
+    const syncVideoElement = () => {
+      const video = videoElementOf(player)
+      if (video) videoRef.current = video
+      return video
+    }
+    const syncQualityLevels = () => {
+      const qualityList = qualityLevelsOf(player)
+      if (!qualityList) {
+        setLevels([])
+        setAutoLevel(-1)
+        return
+      }
+      setLevels(
+        Array.from({ length: qualityList.length }, (_, i) => ({
+          i,
+          label: qualityLabel(qualityList[i].height, qualityList[i].bitrate),
+        })),
+      )
+      setAutoLevel(qualityList.selectedIndex)
+    }
+    const bindQualityEvents = () => {
+      const qualityList = qualityLevelsOf(player)
+      if (boundQualityList !== qualityList) {
+        boundQualityList?.off('addqualitylevel', syncQualityLevels)
+        boundQualityList?.off('removequalitylevel', syncQualityLevels)
+        boundQualityList?.off('change', syncQualityLevels)
+        boundQualityList = qualityList
+        boundQualityList?.on('addqualitylevel', syncQualityLevels)
+        boundQualityList?.on('removequalitylevel', syncQualityLevels)
+        boundQualityList?.on('change', syncQualityLevels)
+      }
+      syncQualityLevels()
+    }
+    const onPlayEvent = () => {
+      setPlaying(true)
+      nudgeUI()
+    }
+    const onPauseEvent = () => {
+      setPlaying(false)
+      setShowUI(true)
+      const video = syncVideoElement()
+      if (video && Number.isFinite(video.duration)) {
+        onTimeRef.current?.(video.currentTime, video.duration, true)
+      }
+    }
+    const onEndedEvent = () => {
+      const video = syncVideoElement()
+      if (!video) return
+      if (preferences.loop) {
+        video.currentTime = 0
+        void player.play()?.catch(() => {})
+        return
+      }
+      setPlaying(false)
+      onTimeRef.current?.(video.currentTime, video.duration, true)
+      onEndedRef.current?.()
+    }
+    const onTimeUpdateEvent = () => {
+      const video = syncVideoElement()
+      if (!video) return
+      setCurrent(video.currentTime)
+      onTimeRef.current?.(video.currentTime, video.duration)
+      if (
+        !outroHandled.current &&
+        onSkipOutroRef.current &&
+        shouldSkipOutro(video.currentTime, video.duration, skipOutroSeconds)
+      ) {
+        outroHandled.current = true
+        onSkipOutroRef.current()
+      }
+    }
+    const onMetadataEvent = () => {
+      const video = syncVideoElement()
+      if (!video) return
+      setVideoH(video.videoHeight)
+      applyResume(video)
+      bindQualityEvents()
+    }
+    const onCanPlayEvent = () => {
+      const video = syncVideoElement()
+      if (!video) return
+      applyResume(video)
+      setWaiting(false)
+      if (autoPlay && !autoPlayApplied.current) {
+        autoPlayApplied.current = true
+        void player.play()?.catch(() => {})
+      }
+    }
+    const onProgressEvent = () => {
+      const ranges = video.buffered
+      if (ranges.length) setBuffered(ranges.end(ranges.length - 1))
+    }
+    const onWaitingEvent = () => setWaiting(true)
+    const onPlayingEvent = () => setWaiting(false)
+    const onErrorEvent = () => {
+      setFailed(true)
+      setWaiting(false)
+    }
+    const onLoadStartEvent = () => {
+      syncVideoElement()
+      setWaiting(true)
+      setFailed(false)
+      bindQualityEvents()
+    }
+
+    const video = syncVideoElement()
+    if (!video) return
+    video.addEventListener('play', onPlayEvent)
+    video.addEventListener('pause', onPauseEvent)
+    video.addEventListener('ended', onEndedEvent)
+    video.addEventListener('timeupdate', onTimeUpdateEvent)
+    video.addEventListener('loadedmetadata', onMetadataEvent)
+    video.addEventListener('durationchange', onMetadataEvent)
+    video.addEventListener('canplay', onCanPlayEvent)
+    video.addEventListener('waiting', onWaitingEvent)
+    video.addEventListener('playing', onPlayingEvent)
+    video.addEventListener('progress', onProgressEvent)
+    video.addEventListener('error', onErrorEvent)
+    video.addEventListener('loadstart', onLoadStartEvent)
+    bindQualityEvents()
+
+    return () => {
+      video.removeEventListener('play', onPlayEvent)
+      video.removeEventListener('pause', onPauseEvent)
+      video.removeEventListener('ended', onEndedEvent)
+      video.removeEventListener('timeupdate', onTimeUpdateEvent)
+      video.removeEventListener('loadedmetadata', onMetadataEvent)
+      video.removeEventListener('durationchange', onMetadataEvent)
+      video.removeEventListener('canplay', onCanPlayEvent)
+      video.removeEventListener('waiting', onWaitingEvent)
+      video.removeEventListener('playing', onPlayingEvent)
+      video.removeEventListener('progress', onProgressEvent)
+      video.removeEventListener('error', onErrorEvent)
+      video.removeEventListener('loadstart', onLoadStartEvent)
+      boundQualityList?.off('addqualitylevel', syncQualityLevels)
+      boundQualityList?.off('removequalitylevel', syncQualityLevels)
+      boundQualityList?.off('change', syncQualityLevels)
+    }
+  }, [applyResume, autoPlay, nudgeUI, playerReady, preferences.loop, skipOutroSeconds])
 
   const shown = scrub ?? current
   const pct = duration ? (shown / duration) * 100 : 0
@@ -623,75 +972,50 @@ export function VideoPlayer({
   return (
     <div
       ref={wrapRef}
-      className={`group relative overflow-hidden bg-black ${
+      className={`group overflow-hidden bg-black ${
         webFull
-          ? 'fixed inset-0 z-[9999] h-screen w-screen'
-          : 'aspect-video rounded-xl ring-1 ring-white/8'
+          ? 'fixed inset-0 z-[9999] h-[100dvh] w-[100dvw]'
+          : 'relative aspect-video rounded-xl ring-1 ring-white/8'
       }`}
       onMouseMove={nudgeUI}
       onMouseLeave={() => playing && setShowUI(false)}
     >
-      <video
-        ref={videoRef}
-        src={useMse ? undefined : src}
-        poster={poster}
-        playsInline
-        className="h-full w-full bg-black object-contain"
-        onClick={toggle}
-        onPlay={() => {
-          setPlaying(true)
-          nudgeUI()
-        }}
-        onPause={() => {
-          setPlaying(false)
-          setShowUI(true)
-          const video = videoRef.current
-          if (video && Number.isFinite(video.duration))
-            onTimeRef.current?.(video.currentTime, video.duration, true)
-        }}
-        onEnded={(e) => {
-          setPlaying(false)
-          onTimeRef.current?.(e.currentTarget.currentTime, e.currentTarget.duration, true)
-          onEndedRef.current?.()
-        }}
-        onTimeUpdate={(e) => {
-          setCurrent(e.currentTarget.currentTime)
-          onTimeRef.current?.(e.currentTarget.currentTime, e.currentTarget.duration)
-          if (
-            !outroHandled.current &&
-            onSkipOutroRef.current &&
-            shouldSkipOutro(
-              e.currentTarget.currentTime,
-              e.currentTarget.duration,
-              skipOutroSeconds,
-            )
-          ) {
-            outroHandled.current = true
-            onSkipOutroRef.current()
-          }
-        }}
-        onLoadedMetadata={(e) => applyResume(e.currentTarget)}
-        onDurationChange={(e) => applyResume(e.currentTarget)}
-        onWaiting={() => setWaiting(true)}
-        onPlaying={() => setWaiting(false)}
-        onCanPlay={(e) => {
-          applyResume(e.currentTarget)
-          setWaiting(false)
-          if (autoPlay && !autoPlayApplied.current) {
-            autoPlayApplied.current = true
-            e.currentTarget.play().catch(() => {})
-          }
-        }}
-        onResize={(e) => setVideoH(e.currentTarget.videoHeight)}
-        onError={() => {
-          setFailed(true)
-          setWaiting(false)
-        }}
-        onProgress={(e) => {
-          const b = e.currentTarget.buffered
-          if (b.length) setBuffered(b.end(b.length - 1))
-        }}
+      <div
+        ref={videoHostRef}
+        data-vjs-player
+        data-source-url={src}
+        onClick={onVideoTap}
+        className={`nebula-videojs-host absolute inset-0 ${
+          enhance === 'on' ? 'nebula-videojs-enhanced' : ''
+        }`}
       />
+
+      {/* Anime4K 增强画面层 */}
+      {enhance !== "off" && (
+        <canvas
+          ref={enhanceCanvasRef}
+          onClick={onVideoTap}
+          className={`absolute inset-0 h-full w-full object-contain transition-opacity ${
+            enhance === "on" ? "opacity-100" : "opacity-0"
+          }`}
+        />
+      )}
+      {enhance === "starting" && (
+        <span className="pointer-events-none absolute right-3 top-3 rounded-md bg-black/75 px-3 py-1.5 text-xs font-medium text-[#e8b23a] backdrop-blur">
+          画质增强启动中…
+        </span>
+      )}
+
+      {/* 顶部标题栏(腾讯视频风格):控制栏可见时一起出现 */}
+      {title && (
+        <div
+          className={`pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-b from-black/80 to-transparent px-4 pb-8 pt-3 transition-opacity ${
+            showUI || !playing ? 'opacity-100' : 'opacity-0'
+          }`}
+        >
+          <p className="truncate text-sm font-medium text-white/95">{title}</p>
+        </div>
+      )}
 
       {/* 弹幕层 */}
       {dmOn && (
@@ -746,19 +1070,55 @@ export function VideoPlayer({
 
       {/* 控制栏 */}
       <div
-        className={`absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent px-4 pb-3 pt-10 transition-opacity ${
+        className={`absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent px-3 pb-2.5 pt-10 transition-opacity sm:px-4 sm:pb-3 ${
           showUI || !playing || dmFocus ? 'opacity-100' : 'pointer-events-none opacity-0'
         }`}
       >
+        {/* 跳过片头/片尾浮钮(腾讯视频风格,悬停在进度条上方) */}
+        {skipIntroSeconds > 0 && shown > 0.5 && shown < skipIntroSeconds && (
+          <button
+            onClick={() => {
+              const v = videoRef.current
+              if (v) v.currentTime = skipIntroSeconds
+              showOsd(`已跳过片头 ${fmt(skipIntroSeconds)}`)
+            }}
+            className="absolute bottom-[72px] right-4 rounded-md border border-white/25 bg-black/60 px-3 py-1.5 text-xs font-medium text-white backdrop-blur transition hover:bg-black/85"
+          >
+            跳过片头
+          </button>
+        )}
+        {skipOutroSeconds > 0 &&
+          hasNextEpisode &&
+          duration > 0 &&
+          shown > Math.max(0, duration - skipOutroSeconds - 30) &&
+          shown < duration - skipOutroSeconds && (
+            <button
+              onClick={() => onSkipOutro?.()}
+              className="absolute bottom-[72px] right-4 rounded-md border border-white/25 bg-black/60 px-3 py-1.5 text-xs font-medium text-white backdrop-blur transition hover:bg-black/85"
+            >
+              跳过片尾
+            </button>
+          )}
+
         {/* 进度条:单层轨道内叠 buffered / played / thumb,三者同坐标系,位置精确 */}
+        <div className="mb-1 select-none text-xs tabular-nums text-[#c9ccd6]">
+          {fmt(current)} / {fmt(duration)}
+        </div>
         <div
           ref={barRef}
           onPointerDown={onBarDown}
+          onPointerMove={onBarHover}
+          onPointerLeave={() => setHoverT(null)}
           className="group/bar relative mb-2 h-4 cursor-pointer touch-none"
         >
-          {scrub !== null && (
-            <span className="absolute -top-7 -translate-x-1/2 rounded bg-black/80 px-2 py-0.5 text-xs tabular-nums text-white" style={{ left: `${pct}%` }}>
-              {fmt(scrub)}
+          {(scrub !== null || hoverT !== null) && (
+            <span
+              className="absolute -top-7 -translate-x-1/2 rounded bg-black/80 px-2 py-0.5 text-xs tabular-nums text-white"
+              style={{
+                left: `${duration ? (((scrub ?? hoverT) ?? 0) / duration) * 100 : 0}%`,
+              }}
+            >
+              {fmt((scrub ?? hoverT) ?? 0)}
             </span>
           )}
           <div className="absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-white/20">
@@ -779,36 +1139,19 @@ export function VideoPlayer({
           </div>
         </div>
 
-        <div className="flex items-center gap-4 text-white">
+        <div className="flex items-center gap-3 text-white sm:gap-4">
           <button onClick={toggle} aria-label={playing ? '暂停' : '播放'}>
             {playing ? <IconPause className="h-5 w-5" /> : <IconPlay className="h-5 w-5" />}
           </button>
 
-          <div className="flex items-center gap-2">
-            <button onClick={() => setMuted((m) => !m)} aria-label="静音">
-              <IconVolume muted={muted || volume === 0} className="h-5 w-5" />
+          {hasNextEpisode && (
+            <button onClick={() => onNextEpisode?.()} aria-label="下一集" title="下一集">
+              <SkipForward className="h-5 w-5" />
             </button>
-            <input
-              type="range"
-              min={0}
-              max={1}
-              step={0.05}
-              value={muted ? 0 : volume}
-              onChange={(e) => {
-                setVolume(Number(e.target.value))
-                setMuted(Number(e.target.value) === 0)
-              }}
-              className="h-1 w-16 cursor-pointer accent-[#e0142c]"
-              aria-label="音量"
-            />
-          </div>
-
-          <span className="text-xs tabular-nums text-[#c9ccd6]">
-            {fmt(current)} / {fmt(duration)}
-          </span>
+          )}
 
           {/* 弹幕输入(bilibili 风格) */}
-          <div className="ml-2 hidden min-w-0 flex-1 items-center gap-2 sm:flex">
+          <div className="ml-2 hidden min-w-0 flex-1 items-center gap-2 md:flex">
             <button
               onClick={() => setDmOn((v) => !v)}
               className={`shrink-0 rounded px-2 py-1 text-xs font-medium transition ${
@@ -839,7 +1182,8 @@ export function VideoPlayer({
             </button>
           </div>
 
-          <div className="ml-auto flex shrink-0 items-center gap-3">
+          <div className="ml-auto flex shrink-0 items-center gap-2.5 sm:gap-3">
+            <SpeedMenu rate={rate} onChange={setRate} />
             <QualityMenu list={list} active={safeQi} onChange={changeQuality} />
             {levels.length > 0 && (
               <LevelsMenu
@@ -848,13 +1192,61 @@ export function VideoPlayer({
                 autoLabel={autoDisplay}
                 onChange={(i) => {
                   setLevel(i)
-                  if (hlsRef.current) hlsRef.current.currentLevel = i
+                  const player = playerRef.current
+                  if (player && !player.isDisposed()) selectVideoJsQuality(player, i)
                 }}
               />
             )}
-            <SpeedMenu rate={rate} onChange={setRate} />
+            <button
+              onClick={toggleEnhance}
+              aria-label="画质增强"
+              title={enhance === "on" ? "关闭画质增强 (Anime4K)" : "开启画质增强 (Anime4K)"}
+              className={`transition ${
+                enhance === "on"
+                  ? "text-[#e8b23a]"
+                  : "text-[#c9ccd6] hover:text-white"
+              }`}
+            >
+              <Sparkles className="h-5 w-5" />
+            </button>
+            {/* 音量:桌面 hover 展开滑条;移动端交给系统按键 */}
+            <div className="group/vol hidden items-center gap-2 sm:flex">
+              <button onClick={() => setMuted((m) => !m)} aria-label="静音">
+                <IconVolume muted={muted || volume === 0} className="h-5 w-5" />
+              </button>
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.05}
+                value={muted ? 0 : volume}
+                onChange={(e) => {
+                  setVolume(Number(e.target.value))
+                  setMuted(Number(e.target.value) === 0)
+                }}
+                className="h-1 w-0 cursor-pointer opacity-0 accent-[#e0142c] transition-all duration-200 group-hover/vol:w-16 group-hover/vol:opacity-100"
+                aria-label="音量"
+              />
+            </div>
+            <PlayerSettingsMenu
+              value={preferences}
+              onChange={(patch) => onPreferencesChange?.(patch)}
+            />
+            {pipSupported && (
+              <button onClick={togglePip} aria-label="画中画" title="画中画" className="hidden sm:block">
+                <PictureInPicture2 className="h-5 w-5" />
+              </button>
+            )}
+            <button
+              onClick={() => setWebFull((v) => !v)}
+              aria-label="网页全屏"
+              title="网页全屏"
+              className="hidden sm:block"
+            >
+              <Expand className={`h-5 w-5 ${webFull ? 'text-[#e0142c]' : ''}`} />
+            </button>
             <button onClick={toggleFs} aria-label="全屏">
-              <IconExpand className={`h-5 w-5 ${fs || webFull ? 'text-[#e0142c]' : ''}`} />
+              <IconExpand className={`h-5 w-5 ${fs || iosNativeFs ? 'text-[#e0142c]' : ''}`} />
             </button>
           </div>
         </div>
@@ -980,6 +1372,130 @@ function SpeedMenu({ rate, onChange }: { rate: number; onChange: (r: number) => 
         </div>
       )}
     </div>
+  )
+}
+
+// 连播设置菜单(腾讯视频风格):自动下一集 / 循环播放 / 跳过片头片尾。
+function PlayerSettingsMenu({
+  value,
+  onChange,
+}: {
+  value: PlaybackPreferences
+  onChange: (patch: Partial<PlaybackPreferences>) => void
+}) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        aria-label="播放设置"
+        title="播放设置"
+        className="text-[#c9ccd6] transition hover:text-white"
+      >
+        <Settings className="h-5 w-5" />
+      </button>
+      {open && (
+        <div className="absolute bottom-full right-0 mb-2 w-56 rounded-lg border border-white/10 bg-[#0e1018] py-1 shadow-xl">
+          <MenuSwitch
+            label="自动下一集"
+            checked={value.autoNext}
+            onChange={(autoNext) => onChange({ autoNext })}
+          />
+          <MenuSwitch
+            label="循环播放"
+            checked={value.loop}
+            onChange={(loop) => onChange({ loop })}
+          />
+          <MenuSwitch
+            label="跳过片头"
+            checked={value.skipIntro}
+            onChange={(skipIntro) => onChange({ skipIntro })}
+          />
+          {value.skipIntro && (
+            <MenuSeconds
+              label="片头时长"
+              value={value.introSeconds}
+              onChange={(introSeconds) => onChange({ introSeconds })}
+            />
+          )}
+          <MenuSwitch
+            label="跳过片尾"
+            checked={value.skipOutro}
+            onChange={(skipOutro) => onChange({ skipOutro })}
+          />
+          {value.skipOutro && (
+            <MenuSeconds
+              label="片尾时长"
+              value={value.outroSeconds}
+              onChange={(outroSeconds) => onChange({ outroSeconds })}
+            />
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function MenuSwitch({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string
+  checked: boolean
+  onChange: (checked: boolean) => void
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className="flex w-full items-center justify-between px-4 py-2 text-left text-xs text-[#c9ccd6] transition hover:bg-white/5 hover:text-white"
+    >
+      {label}
+      <span
+        className={`relative h-4 w-7 shrink-0 rounded-full transition ${
+          checked ? "bg-[#e0142c]" : "bg-white/15"
+        }`}
+        aria-hidden="true"
+      >
+        <span
+          className={`absolute top-0.5 h-3 w-3 rounded-full bg-white shadow transition ${
+            checked ? "left-3.5" : "left-0.5"
+          }`}
+        />
+      </span>
+    </button>
+  )
+}
+
+function MenuSeconds({
+  label,
+  value,
+  onChange,
+}: {
+  label: string
+  value: number
+  onChange: (value: number) => void
+}) {
+  return (
+    <label className="flex items-center justify-between px-4 py-1.5 text-xs text-[#5a5f70]">
+      {label}
+      <span className="inline-flex items-center gap-1.5">
+        <input
+          aria-label={label}
+          type="number"
+          min={0}
+          max={600}
+          step={5}
+          value={value}
+          onChange={(event) => onChange(Number(event.target.value))}
+          className="h-6 w-14 rounded-md border border-white/10 bg-[#14161f] px-2 text-center text-xs tabular-nums text-white outline-none focus:border-[#e0142c]/60"
+        />
+        秒
+      </span>
+    </label>
   )
 }
 
