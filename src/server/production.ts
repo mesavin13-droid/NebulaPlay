@@ -9,8 +9,19 @@ const allowedRequestHosts = (process.env.TVBOX_PROXY_ALLOWED_HOSTS ?? "")
   .map((value) => value.trim())
   .filter(Boolean)
 
+// 并发上限随部署规模变化：单人自用可以调低，多人观看需要抬高播放额度。
+// 值非法（非正整数）时回落到中间件内置默认，不让一个笔误把代理限死。
+function positiveInt(value: string | undefined): number | undefined {
+  const parsed = Number(value)
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined
+}
+
 const runtime = createTvboxProxyMiddleware({
   allowedRequestHosts: allowedRequestHosts.length ? allowedRequestHosts : undefined,
+  maxConcurrent: positiveInt(process.env.TVBOX_PROXY_MAX_CONCURRENT),
+  maxDocumentConcurrent: positiveInt(
+    process.env.TVBOX_PROXY_MAX_DOCUMENT_CONCURRENT,
+  ),
 })
 
 function sendJson(res: ServerResponse, status: number, payload: object, head = false) {

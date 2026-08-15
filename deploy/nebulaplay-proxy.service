@@ -12,6 +12,9 @@ Environment=NODE_ENV=production
 Environment=PROXY_HOST=127.0.0.1
 Environment=PROXY_PORT=8787
 Environment=TVBOX_PROXY_ALLOWED_HOSTS=nebu.life,www.nebu.life
+# 并发预算：总上限与文档（目录/详情/探活）上限，留空则使用内置默认 64 / 24。
+# Environment=TVBOX_PROXY_MAX_CONCURRENT=64
+# Environment=TVBOX_PROXY_MAX_DOCUMENT_CONCURRENT=24
 ExecStart=/usr/local/bin/node /opt/nebulaplay/current/dist-server/production.js
 Restart=on-failure
 RestartSec=5s

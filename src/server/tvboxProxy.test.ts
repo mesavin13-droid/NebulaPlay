@@ -6,6 +6,7 @@ import {
   request,
   type RequestListener,
   type Server,
+  type ServerResponse,
 } from "node:http"
 import { afterEach, describe, expect, it } from "vitest"
 import {
@@ -29,7 +30,11 @@ async function listen(handler: RequestListener): Promise<string> {
 }
 
 async function proxyForLocalUpstream(
-  options: { maxDocumentBytes?: number } = {},
+  options: {
+    maxDocumentBytes?: number
+    maxConcurrent?: number
+    maxDocumentConcurrent?: number
+  } = {},
 ) {
   const runtime = createTvboxProxyMiddleware({
     ...options,
@@ -408,5 +413,78 @@ describe("/__tvbox security boundary", () => {
         ),
       ),
     ])
+  })
+})
+
+describe("/__tvbox 并发预算", () => {
+  it("文档请求打满低配额后,播放请求仍拿得到槽位", async () => {
+    const holding: ServerResponse[] = []
+    let markDocumentInFlight!: () => void
+    const documentInFlight = new Promise<void>((resolve) => {
+      markDocumentInFlight = resolve
+    })
+    const upstream = await listen((req, res) => {
+      if (req.url?.endsWith(".ts")) {
+        res.setHeader("content-type", "video/mp2t")
+        res.end("segment")
+        return
+      }
+      // 文档响应挂住不收口,槽位就一直被占着。
+      res.setHeader("content-type", "application/json")
+      holding.push(res)
+      markDocumentInFlight()
+    })
+    const { origin: proxy } = await proxyForLocalUpstream({
+      maxConcurrent: 4,
+      maxDocumentConcurrent: 1,
+    })
+    const port = new URL(upstream).port
+    const doc = (name: string) =>
+      proxied(proxy, `http://upstream.test:${port}/${name}.json`)
+
+    const held = fetch(doc("catalog"))
+    await documentInFlight
+
+    const rejected = await fetch(doc("detail"))
+    expect(rejected.status).toBe(429)
+    expect(rejected.headers.get("retry-after")).toBe("1")
+    expect(await rejected.json()).toMatchObject({ code: "TOO_MANY_REQUESTS" })
+
+    // 关键结论:探活/目录把文档额度打满,播放链路不受影响。
+    const media = await fetch(
+      proxied(proxy, `http://upstream.test:${port}/seg.ts`),
+    )
+    expect(media.status).toBe(200)
+    expect(await media.text()).toBe("segment")
+
+    for (const response of holding) response.end('{"ok":true}')
+    const first = await held
+    expect(first.status).toBe(200)
+    await first.text()
+  })
+
+  it("总额度用尽时播放请求同样被拒", async () => {
+    const upstream = await listen((_req, res) => {
+      res.setHeader("content-type", "video/mp2t")
+      res.write(Buffer.alloc(16))
+      // 不结束响应,第一个槽位保持占用
+    })
+    const { origin: proxy } = await proxyForLocalUpstream({ maxConcurrent: 1 })
+    const port = new URL(upstream).port
+
+    const first = await fetch(
+      proxied(proxy, `http://upstream.test:${port}/a.ts`),
+    )
+    expect(first.status).toBe(200)
+    const reader = first.body!.getReader()
+    await reader.read()
+
+    const second = await fetch(
+      proxied(proxy, `http://upstream.test:${port}/b.ts`),
+    )
+    expect(second.status).toBe(429)
+    expect(await second.json()).toMatchObject({ code: "TOO_MANY_REQUESTS" })
+
+    await reader.cancel()
   })
 })

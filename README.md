@@ -218,7 +218,7 @@ flowchart LR
 一条 TVBox/CMS 请求的实际路径：
 
 1. `App.tsx` 合并内置线路与浏览器中保存的自定义配置。
-2. `sourceHealth.ts` 延迟探活并过滤已确认失活的默认线路。
+2. `sourceHealth.ts` 延迟探活并过滤已确认失活的默认线路：结论有 6 小时 TTL，单轮最多探 16 条并按游标轮转，本轮没探到的线路沿用既有结论。
 3. `useCatalog.ts` 等当前片源首屏数据完整返回；最多 7 天的目录缓存只在本次刷新失败时兜底。
 4. `tvbox.ts` 解析配置或直连 CMS，选择可用站点并映射为 `Title`。
 5. Browse/Search 把筛选、分页或关键词映射为 CMS 查询参数。
@@ -268,6 +268,7 @@ NebulaPlay 当前没有账号和服务端数据库。以下信息保存在当前
 | `nebulaplay:playback-preferences:v1` | 自动下一集、片头/片尾跳过开关与秒数 |
 | `nebulaplay:catalog-cache:v1:<sourceId>` | 最多 300 条目录缓存，最长 7 天 |
 | `nebulaplay:dead-sources:v1` / `live-sources:v1` | 内置线路探活结果 |
+| `nebulaplay:source-health-run:v1` | 上一轮探活的时间与游标，用于 TTL 与分批轮转 |
 | `nebulaplay:tvbox-site:v1` | 线路最近一次成功的 CMS 站点 |
 
 清除浏览器站点数据会同时删除这些记录。隐私模式、存储被禁用或配额耗尽时，应用会降级运行，但配置与进度可能无法保存。
@@ -292,6 +293,15 @@ HOST=0.0.0.0 TVBOX_PROXY_ALLOWED_HOSTS=192.168.1.20 pnpm dev
 ```
 
 `TVBOX_PROXY_ALLOWED_HOSTS` 是**进入代理的 HTTP Host 允许列表**，不是外部片源域名白名单。不要把 Vite 开发服务器或 Node 的 `8787` 端口直接暴露到公网。
+
+并发预算分两档，避免目录/探活这类短请求把播放需要的槽位吃光（媒体分片会占住槽位直到整段传完）：
+
+| 环境变量 | 默认 | 作用 |
+| --- | --- | --- |
+| `TVBOX_PROXY_MAX_CONCURRENT` | `64` | 代理在途请求总上限，播放与文档共用 |
+| `TVBOX_PROXY_MAX_DOCUMENT_CONCURRENT` | `24` | 目录、详情、探活等**文档**请求的上限，恒不超过总上限 |
+
+两者只接受正整数，填错时回落到默认值。超限返回 `429 TOO_MANY_REQUESTS` 并带 `retry-after: 1`。
 
 仓库的 `deploy/` 提供 Nginx、systemd、UFW、Node 安装与版本化发布文件，面向单人自托管。公网入口只开放 Nginx 的 `80/443`，`/__tvbox` 反代到 loopback Node 服务。生产部署仍需按使用范围选择：
 

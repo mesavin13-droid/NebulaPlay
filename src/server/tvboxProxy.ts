@@ -18,6 +18,7 @@ export type TvboxProxyOptions = {
   allowedRequestHosts?: string[]
   allowAddress?: AllowAddress
   maxConcurrent?: number
+  maxDocumentConcurrent?: number
   maxDocumentBytes?: number
   perAttemptTimeoutMs?: number
   resolveHost?: ResolveHost
@@ -392,7 +393,15 @@ export function createTvboxProxyMiddleware(
     options.allowAddress ?? ((address: string) => isPublicProxyAddress(address))
   const resolveHost = options.resolveHost ?? defaultResolveHost
   const resolvePublicHost = options.resolvePublicHost ?? defaultResolvePublicHost
-  const maxConcurrent = options.maxConcurrent ?? 24
+  // 媒体分片会占住槽位直到整段传完，目录 / 探活这类文档请求则是短平快的。
+  // 共用一个计数器时，后台探活风暴能把播放需要的槽位吃光，表现为 VHS 收到
+  // 429 后直接判定致命错误。因此文档请求另有一条更低的上限：它最多只能占用
+  // maxDocumentConcurrent 个槽位，剩下的额度对播放永远可用。
+  const maxConcurrent = Math.max(1, options.maxConcurrent ?? 64)
+  const maxDocumentConcurrent = Math.min(
+    maxConcurrent,
+    Math.max(1, options.maxDocumentConcurrent ?? 24),
+  )
   const maxDocumentBytes = options.maxDocumentBytes ?? 8 * 1024 * 1024
   const perAttemptTimeoutMs = options.perAttemptTimeoutMs ?? 15_000
   const totalTimeoutMs = options.totalTimeoutMs ?? 35_000
@@ -401,6 +410,7 @@ export function createTvboxProxyMiddleware(
     { addresses: ResolvedAddress[]; expiresAt: number }
   >()
   let active = 0
+  let activeDocuments = 0
 
   const resolveSocketAddresses = async (hostname: string) => {
     let addresses: ResolvedAddress[]
@@ -592,11 +602,6 @@ export function createTvboxProxyMiddleware(
       sendJson(res, 405, "METHOD_NOT_ALLOWED", "仅支持 GET 和 HEAD")
       return
     }
-    if (active >= maxConcurrent) {
-      sendJson(res, 429, "TOO_MANY_REQUESTS", "代理并发请求过多")
-      return
-    }
-
     const range =
       typeof req.headers.range === "string" ? req.headers.range : undefined
     if (range && !RANGE_HEADER.test(range)) {
@@ -618,7 +623,20 @@ export function createTvboxProxyMiddleware(
       return
     }
 
+    // 播放链路(m3u8 / 分片)吃总额度；目录、详情、探活等文档请求另受更低的
+    // 上限约束，保证它们无论怎么突发都留得下播放需要的槽位。
+    const isMediaRequest = mediaUrl(target.href)
+    if (
+      active >= maxConcurrent ||
+      (!isMediaRequest && activeDocuments >= maxDocumentConcurrent)
+    ) {
+      res.setHeader("retry-after", "1")
+      sendJson(res, 429, "TOO_MANY_REQUESTS", "代理并发请求过多")
+      return
+    }
+
     active += 1
+    if (!isMediaRequest) activeDocuments += 1
     const controller = new AbortController()
     const totalTimer = setTimeout(
       () =>
@@ -779,6 +797,7 @@ export function createTvboxProxyMiddleware(
       req.removeListener("aborted", abortClient)
       res.removeListener("close", abortClient)
       active -= 1
+      if (!isMediaRequest) activeDocuments -= 1
     }
   }
 
