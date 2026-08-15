@@ -4,7 +4,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import type { Title } from './data'
 import { recordHistory } from './history'
 import type { Catalog } from './useCatalog'
-import { VideoPlayer } from './ui'
+import { VideoPlayer } from './VideoPlayer'
 import { Home } from './views/Home'
 
 const title: Title = {

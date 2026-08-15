@@ -20,10 +20,12 @@ import { Home } from "./views/Home"
 import { Player } from "./views/Player"
 import { Search } from "./views/Search"
 
-type View = { name: "home" } | { name: "browse" } | {
-  name: "search"
-  q: string
-} | { name: "detail" id: string } | { name: "player" id: string ep: number }
+type View =
+  | { name: "home" }
+  | { name: "browse" }
+  | { name: "search"; q: string }
+  | { name: "detail"; id: string }
+  | { name: "player"; id: string; ep: number }
 
 const SITE_URL = "https://nebu.life"
 const REPOSITORY_URL = "https://github.com/AliceDel66/NebulaPlay"

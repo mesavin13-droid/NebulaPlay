@@ -101,7 +101,8 @@ NebulaPlay 把目录浏览、搜索、详情、选集和播放 UI 与数据来�
 - 兼容 CMS API 的自定义 HTML 详情地址已有配置入口，但会受到开发代理活动 HTML 拦截，尚未形成可用的端到端路径。
 - 页面导航使用组件状态，没有可分享的详情/播放 URL，也不支持刷新后恢复路由。
 - `dist/` 仍是纯静态前端；自托管时必须同时部署 `dist-server/`，并由反向代理分流 `/__tvbox`。
-- 当前没有 CI、正式发布流程、内容审核后台或权利投诉处理系统。
+- CI 目前只覆盖 typecheck / 测试 / 构建；没有正式发布流程、内容审核后台或权利投诉处理系统。
+- `pnpm format` 尚未在全仓跑过：`oxfmt` 升级到 0.63 后风格与现有代码不一致，一次性格式化会产生跨 48 个文件的巨型 diff，需单独作为一次提交决策。因此 CI 不校验格式。
 
 ## 快速开始
 
@@ -125,18 +126,22 @@ pnpm dev
 ### 验证代码
 
 ```bash
+pnpm typecheck
 pnpm test
 pnpm build
 ```
+
+这三条与 GitHub Actions（`.github/workflows/ci.yml`）在 push 与 Pull Request 上跑的完全一致。
 
 常用命令：
 
 | 命令 | 作用 |
 | --- | --- |
 | `pnpm dev` | 启动本地开发服务器，默认 `127.0.0.1:8443` |
+| `pnpm typecheck` | 对前端与共享代码运行 `tsc --noEmit` |
 | `pnpm test` | 单次运行 Vitest |
 | `pnpm test:watch` | 监听模式运行测试 |
-| `pnpm build` | 构建静态前端到 `dist/`，并编译代理进程到 `dist-server/` |
+| `pnpm build` | 先 `typecheck`，再构建静态前端到 `dist/`，并编译代理进程到 `dist-server/` |
 | `pnpm start:proxy` | 启动已编译的生产代理，默认仅监听 `127.0.0.1:8787` |
 | `pnpm preview` | 预览 `dist/`；不注册开发代理 |
 | `pnpm format` | 使用 oxfmt 格式化项目 |
@@ -225,7 +230,7 @@ flowchart LR
 
 播放器支持：
 
-- HLS.js 与 Safari 原生 HLS；
+- Video.js 8 + VHS 与 Safari 原生 HLS；
 - Master Playlist 多码率自动/手动切换；
 - 切换播放线路或清晰度时保留当前时间与播放状态；
 - 同一影片切集时保持 Player 页面，下一集线路就绪后原位替换，不返回整页 Loading；
@@ -330,6 +335,7 @@ HOST=0.0.0.0 TVBOX_PROXY_ALLOWED_HOSTS=192.168.1.20 pnpm dev
 
 ```bash
 pnpm install --frozen-lockfile
+pnpm typecheck
 pnpm test
 pnpm build
 ```

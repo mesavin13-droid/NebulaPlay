@@ -43,13 +43,22 @@ const catalog: Catalog = {
 }
 
 function deferred<T>() {
-  let resolve: (value: T) => void
-  let reject: (reason?: unknown) => void
+  // Promise 执行器同步运行，两个引用在 return 前必然已赋值。
+  let resolve!: (value: T) => void
+  let reject!: (reason?: unknown) => void
   const promise = new Promise<T>((res, rej) => {
     resolve = res
     reject = rej
   })
   return { promise, resolve, reject }
+}
+
+// VideoPlayer 走 React.lazy。即使模块已预热,React 解析 lazy 仍要跨任务队列,
+// 单纯 await Promise.resolve() 刷不出来,这里让出几轮宏任务。
+async function flushLazy(turns = 4) {
+  for (let i = 0; i < turns; i++) {
+    await new Promise((resolve) => setTimeout(resolve, 0))
+  }
 }
 
 function makeSource(overrides: Partial<VideoSource> = {}): VideoSource {
@@ -84,8 +93,10 @@ describe("页面数据完整加载态", () => {
   let container: HTMLDivElement
   let root: Root
 
-  beforeAll(() => {
+  beforeAll(async () => {
     reactTestGlobal.IS_REACT_ACT_ENVIRONMENT = true
+    // 预热 lazy chunk:模块进过 registry 后,Suspense 只需再刷一轮任务队列。
+    await import("./VideoPlayer")
   })
 
   afterAll(() => {
@@ -261,8 +272,7 @@ describe("页面数据完整加载态", () => {
           onBack={() => {}}
         />,
       )
-      await Promise.resolve()
-      await Promise.resolve()
+      await flushLazy()
     })
 
     const firstVideo = container.querySelector("video")

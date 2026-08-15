@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [dev, main]
+  pull_request:
+  workflow_dispatch:
+
+# 同一分支上只保留最新一次运行，旧的自动取消。
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: typecheck · test · build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          # 与 Vite 8 的引擎要求一致（^20.19.0 || >=22.12.0）。
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # 单独跑一次，让类型错误与构建失败在日志里可区分。
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test
+
+      # 构建必须在没有 .figma/（git-ignored 的本地配置）的情况下也能通过。
+      - name: Build
+        run: pnpm build

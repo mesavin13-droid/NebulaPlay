@@ -34,9 +34,14 @@ export type Title = {
 }
 
 // 单一清晰度的可播放源。
-export type PlaySource = { label: string url: string }
+export type PlaySource = { label: string; url: string }
 
-export type RankItem = { name: string hot: number up: boolean titleId?: string }
+export type RankItem = {
+  name: string
+  hot: number
+  up: boolean
+  titleId?: string
+}
 export type HistoryItem = {
   titleId: string
   name: string
@@ -44,8 +49,8 @@ export type HistoryItem = {
   progress: number
   img: string
 }
-export type Filters = { genres: string[] regions: string[] years: string[] }
-export type RatingPoint = { d: string v: number }
+export type Filters = { genres: string[]; regions: string[]; years: string[] }
+export type RatingPoint = { d: string; v: number }
 
 // 条件查询:类型 / 地区 / 年份 / 排序。「全部」等占位值在实现里视为未选择。
 export type BrowseFilters = {

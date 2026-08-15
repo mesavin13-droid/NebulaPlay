@@ -1,7 +1,7 @@
 import type { VideoSource } from "./data"
 import { makeTvboxLineSource } from "./tvbox"
 
-export const BUILTIN_LINES: { name: string url: string }[] = [
+export const BUILTIN_LINES: { name: string; url: string }[] = [
   // 用户优先使用的新增线路固定置顶；默认选中项由 DEFAULT_SOURCE_ID 指向速播。
   { name: "百度资源 (bdzy.tv)", url: "https://bdzy.tv/api.php/provide/vod" },
   { name: "索尼 (suonizy)", url: "https://suonizy.net/api.php/provide/vod" },

@@ -26,11 +26,12 @@ export function EpisodePager({
       container.scrollTo({ left: Math.max(0, left), behavior: "smooth" })
     }
     revealActive()
+    const container = containerRef.current
     const observer =
-      typeof ResizeObserver === "undefined" || !containerRef.current
+      typeof ResizeObserver === "undefined" || !container
         ? null
         : new ResizeObserver(revealActive)
-    observer?.observe(containerRef.current)
+    if (container) observer?.observe(container)
     window.addEventListener("resize", revealActive)
     return () => {
       observer?.disconnect()

@@ -308,7 +308,7 @@ export function Search({
   )
 }
 
-function Tag({ label, onClick }: { label: string onClick: () => void }) {
+function Tag({ label, onClick }: { label: string; onClick: () => void }) {
   return (
     <button
       onClick={onClick}

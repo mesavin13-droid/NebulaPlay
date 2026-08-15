@@ -1,9 +1,9 @@
 import { defineConfig, type HtmlTagDescriptor, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import fs from 'node:fs'
 import path from 'node:path'
 
-import siteConfiguration from './.figma/make/site.json' with { type: 'json' }
 import { tvboxProxyPlugin } from './src/server/tvboxProxy.ts'
 
 // Vite config — https://vitejs.dev/config/
@@ -25,7 +25,7 @@ export default defineConfig(({ mode }) => {
       react(),
       tailwindcss(),
       tvboxProxyPlugin({ allowedRequestHosts: proxyHosts.length ? proxyHosts : undefined }),
-      figmaSiteConfiguration(siteConfiguration),
+      figmaSiteConfiguration(loadSiteConfiguration()),
       figmaErrorOverlayReplay(),
       figmaReactRefreshBoundaryFallback(),
       figmaMakeKitPlugin({ storiesGlob: '/src/**/*.stories.{ts,tsx,js,jsx}' }),
@@ -75,6 +75,33 @@ type FigmaSiteConfiguration = {
   }
   accessibility?: {
     addBypassLinks?: boolean
+  }
+}
+
+/**
+ * `.figma/` is Figma Make's local-only config directory and is git-ignored, so a
+ * fresh clone (and CI) has no site.json. Read it opportunistically and fall back
+ * to the repository defaults instead of failing the build on a missing file.
+ *
+ * The fallback keeps `robots.index: false`: builds must stay unindexed until the
+ * compliance review documented in the README is done.
+ */
+const DEFAULT_SITE_CONFIGURATION: FigmaSiteConfiguration = {
+  title: 'NebulaPlay',
+  description: '非营利在线视频流媒体网站',
+  language: 'zh',
+  robots: { index: false },
+}
+
+function loadSiteConfiguration(): FigmaSiteConfiguration {
+  const configPath = path.resolve(import.meta.dirname, '.figma/make/site.json')
+  try {
+    return {
+      ...DEFAULT_SITE_CONFIGURATION,
+      ...(JSON.parse(fs.readFileSync(configPath, 'utf8')) as FigmaSiteConfiguration),
+    }
+  } catch {
+    return DEFAULT_SITE_CONFIGURATION
   }
 }
 

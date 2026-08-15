@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { lazy, Suspense, useEffect, useRef, useState } from "react"
 import {
   ratingLabel,
   type PlaySource,
@@ -15,7 +15,14 @@ import {
   type PlaybackPreferences,
 } from "../playbackPreferences"
 import type { Catalog } from "../useCatalog"
-import { IconChevron, IconPlay, IconStar, PosterCard, VideoPlayer } from "../ui"
+import { IconChevron, IconPlay, IconStar, PosterCard } from "../ui"
+
+// video.js + VHS 占首屏包的大头,但只有真正进播放页才用得上。拆成独立 chunk,
+// 并在播放页一挂载就开始拉,与详情/播放地址的网络请求并行,不让它串在后面。
+const loadVideoPlayer = () => import("../VideoPlayer")
+const VideoPlayer = lazy(() =>
+  loadVideoPlayer().then((module) => ({ default: module.VideoPlayer })),
+)
 
 type ResolvedPlayback = {
   episodeKey: string
@@ -66,6 +73,11 @@ export function Player({
     history && historyEpisode(history) === activeEpisode
       ? { positionSeconds: history.positionSeconds, progress: history.progress }
       : undefined
+
+  // 不等 playback 解析完再触发 lazy 加载,否则 chunk 请求会排在详情请求后面。
+  useEffect(() => {
+    void loadVideoPlayer()
+  }, [])
 
   useEffect(() => {
     lastSaved.current = 0
@@ -232,62 +244,70 @@ export function Player({
             </div>
           ) : playback ? (
             <div className="relative">
-              <VideoPlayer
-                key={`${id}-${playback.episodeKey}`}
-                sources={playback.sources}
-                poster={t.backdrop}
-                title={
-                  isSeries ? `${t.name} 第 ${playback.episode} 集` : t.name
+              <Suspense
+                fallback={
+                  <div className="grid aspect-video place-items-center rounded-xl bg-black">
+                    <PageLoading label="正在载入播放器" compact />
+                  </div>
                 }
-                resumePoint={resumePoint}
-                autoPlay={playback.seamless}
-                showWaitingIndicator={!playback.seamless}
-                hasNextEpisode={activeNextEpisode !== null}
-                preferences={preferences}
-                skipIntroSeconds={
-                  preferences.skipIntro ? preferences.introSeconds : 0
-                }
-                skipOutroSeconds={
-                  preferences.skipOutro && activeNextEpisode
-                    ? preferences.outroSeconds
-                    : 0
-                }
-                onEnded={
-                  preferences.autoNext && activeNextEpisode
-                    ? playNext
-                    : undefined
-                }
-                onSkipOutro={
-                  preferences.skipOutro && activeNextEpisode
-                    ? playNext
-                    : undefined
-                }
-                onNextEpisode={activeNextEpisode ? playNext : undefined}
-                onPreferencesChange={updatePreferences}
-                onTime={(cur, dur, force) => {
-                  if (
-                    !Number.isFinite(cur) ||
-                    !Number.isFinite(dur) ||
-                    dur <= 0 ||
-                    cur < 1
-                  )
-                    return
-                  const now = Date.now()
-                  if (!force && now - lastSaved.current < 4000) return
-                  lastSaved.current = now
-                  recordHistory({
-                    sourceId: source.id,
-                    titleId: t.id,
-                    name: t.name,
-                    ep: isSeries ? `第 ${playback.episode} 集` : t.latest,
-                    episode: playback.episode,
-                    progress: Math.min(100, Math.round((cur / dur) * 100)),
-                    positionSeconds: Math.min(cur, dur),
-                    durationSeconds: dur,
-                    img: t.backdrop,
-                  })
-                }}
-              />
+              >
+                <VideoPlayer
+                  key={`${id}-${playback.episodeKey}`}
+                  sources={playback.sources}
+                  poster={t.backdrop}
+                  title={
+                    isSeries ? `${t.name} 第 ${playback.episode} 集` : t.name
+                  }
+                  resumePoint={resumePoint}
+                  autoPlay={playback.seamless}
+                  showWaitingIndicator={!playback.seamless}
+                  hasNextEpisode={activeNextEpisode !== null}
+                  preferences={preferences}
+                  skipIntroSeconds={
+                    preferences.skipIntro ? preferences.introSeconds : 0
+                  }
+                  skipOutroSeconds={
+                    preferences.skipOutro && activeNextEpisode
+                      ? preferences.outroSeconds
+                      : 0
+                  }
+                  onEnded={
+                    preferences.autoNext && activeNextEpisode
+                      ? playNext
+                      : undefined
+                  }
+                  onSkipOutro={
+                    preferences.skipOutro && activeNextEpisode
+                      ? playNext
+                      : undefined
+                  }
+                  onNextEpisode={activeNextEpisode ? playNext : undefined}
+                  onPreferencesChange={updatePreferences}
+                  onTime={(cur, dur, force) => {
+                    if (
+                      !Number.isFinite(cur) ||
+                      !Number.isFinite(dur) ||
+                      dur <= 0 ||
+                      cur < 1
+                    )
+                      return
+                    const now = Date.now()
+                    if (!force && now - lastSaved.current < 4000) return
+                    lastSaved.current = now
+                    recordHistory({
+                      sourceId: source.id,
+                      titleId: t.id,
+                      name: t.name,
+                      ep: isSeries ? `第 ${playback.episode} 集` : t.latest,
+                      episode: playback.episode,
+                      progress: Math.min(100, Math.round((cur / dur) * 100)),
+                      positionSeconds: Math.min(cur, dur),
+                      durationSeconds: dur,
+                      img: t.backdrop,
+                    })
+                  }}
+                />
+              </Suspense>
               {switchingEpisode && (
                 <span className="pointer-events-none absolute right-3 top-3 rounded-md bg-black/75 px-3 py-1.5 text-xs font-medium text-white backdrop-blur">
                   正在切换至第 {ep} 集…
