@@ -8,9 +8,6 @@ importers:
 
   .:
     dependencies:
-      anime4k-webgpu:
-        specifier: ^1.0.0
-        version: 1.0.0(@webgpu/types@0.1.71)
       lucide-react:
         specifier: ^1.27.0
         version: 1.27.0(react@19.2.4)
@@ -568,11 +565,6 @@ packages:
 
   aes-decrypter@4.0.2:
     resolution: {integrity: sha512-lc+/9s6iJvuaRe5qDlMTpCFjnwpkeOXp8qP3oiZ5jsj1MRg+SBVUmmICrhxHvc8OELSmc+fEyyxAuppY6hrWzw==}
-
-  anime4k-webgpu@1.0.0:
-    resolution: {integrity: sha512-syZZyDRHYukFnDLxdES4AuMHzKwxlu5Lo52yhEEc1hwKQmvza8DGC62/VDPrrWOu4KArU5jh/0yFJQBwetGuxg==}
-    peerDependencies:
-      '@webgpu/types': ^0.1.38
 
   assertion-error@2.0.1:
     resolution: {integrity: sha512-Izi8RQcffqCeNVgFigKli1ssklIbpHnCYc6AknXGYoB6grJqyeby7jv12JUQgmTAnIDnbck1uxksT4dzN3PWBA==}
@@ -1508,10 +1500,6 @@ snapshots:
       '@videojs/vhs-utils': 4.1.2
       global: 4.4.0
       pkcs7: 1.0.4
-
-  anime4k-webgpu@1.0.0(@webgpu/types@0.1.71):
-    dependencies:
-      '@webgpu/types': 0.1.71
 
   assertion-error@2.0.1: {}
 

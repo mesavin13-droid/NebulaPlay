@@ -1,10 +1,12 @@
 // ============================================================================
 // Anime4K WebGPU 画质增强
 // ----------------------------------------------------------------------------
-// 把 video 帧实时送进 Anime4K(超分 + 修复)管线,渲染到覆盖在视频上方的 canvas。
-// 官方包 anime4k-webgpu 内置 3MB+ WGSL shader,这里用动态 import,只有用户
-// 手动开启时才加载;渲染循环自己管理(requestVideoFrameCallback),可以随时停止。
+// 把 video 帧实时送进 Anime4K DoG 清晰化管线,渲染到覆盖在视频上方的 canvas。
+// 管线内联在 ./anime4kDoG,不再依赖 3.45 MB 的 anime4k-webgpu 包;
+// 渲染循环自己管理(requestVideoFrameCallback),可以随时停止。
 // ============================================================================
+
+import { createDoGPipeline, type DoGPipeline } from "./anime4kDoG"
 
 export type Anime4KHandle = {
   stop: () => void
@@ -115,8 +117,6 @@ export async function startAnime4K(
 
   // GANUUL 内部有 18 段 compute pipeline，对集成显卡会抢占视频解码所需的
   // GPU 时间。DoG 是 Anime4K 自带的轻量清晰化管线，适合持续在线播放。
-  const { DoG } = await import("anime4k-webgpu")
-
   const bindGroupLayout = device.createBindGroupLayout({
     entries: [
       { binding: 1, visibility: GPUShaderStage.FRAGMENT, sampler: {} },
@@ -143,25 +143,16 @@ export async function startAnime4K(
     minFilter: "linear",
   })
 
-  type Anime4KPipeline = {
-    pass: (encoder: GPUCommandEncoder) => void
-    getOutputTexture: () => GPUTexture
-    textures?: GPUTexture[]
-    strengthBuffer?: GPUBuffer
-  }
   let texW = 0
   let texH = 0
   let inputTexture: GPUTexture | null = null
-  let pipelines: Anime4KPipeline[] = []
+  let pipelines: DoGPipeline[] = []
   let blitBindGroup: GPUBindGroup | null = null
   let targetFps = 30
   let minFrameInterval = 1000 / targetFps
 
   const destroyPipelines = () => {
-    for (const pipeline of pipelines) {
-      pipeline.textures?.forEach((texture) => texture.destroy())
-      pipeline.strengthBuffer?.destroy()
-    }
+    for (const pipeline of pipelines) pipeline.destroy()
     pipelines = []
   }
 
@@ -180,7 +171,7 @@ export async function startAnime4K(
         GPUTextureUsage.COPY_DST |
         GPUTextureUsage.RENDER_ATTACHMENT,
     })
-    const deblur = new DoG({ device, inputTexture })
+    const deblur = createDoGPipeline({ device, inputTexture })
     deblur.updateParam("strength", 3)
     pipelines = [deblur]
     targetFps = enhancementTargetFps(texW, texH)

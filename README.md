@@ -255,6 +255,14 @@ flowchart LR
 
 续播规则：小于 5 秒、进度达到 95%，或距离片尾不超过 10 秒的记录不会触发续播；旧版只有百分比的历史记录仍可兼容。
 
+播放器代码不进首屏包。`src/VideoPlayer.tsx` 通过 `React.lazy` 拆成独立 chunk（约 216 kB gzip JS + 12 kB gzip CSS），只在进入播放页时加载；`views/Player.tsx` 一挂载就触发这次动态 `import()`，与详情、播放地址的请求并行，不排在它们后面。
+
+画质增强用 Anime4K 的 DoG 清晰化管线，实现内联在 `src/anime4kDoG.ts`，不再依赖 `anime4k-webgpu` 包。原包发布的是 3.45 MB UMD 产物（约 955 kB gzip），体积几乎全部来自 GAN 超分的权重常量，而播放页只用 DoG 一条管线——真正需要的是 4 段合计约 5.7 kB 的 WGSL 和它们之间的绑定关系。内联后这部分并进播放器 chunk，只增加约 1.6 kB gzip。
+
+`src/anime4kDoG.ts` 里的 4 段 WGSL 逐字照搬上游（MIT），**未做任何修改**——目标是体积不是画质。改动它们等于改画面。WebGPU 的全局类型原本靠 `anime4k-webgpu` 的 `.d.ts` 间接带入，现由 `tsconfig.json` 的 `compilerOptions.types` 显式声明。
+
+`src/videoPlayer.css` 里的覆盖规则必须留在播放器 chunk 内、排在 `video-js.css` 之后：两边存在同特异性（`0,2,0`）的规则（例如 `.nebula-videojs-host .vjs-control-bar` 与 `.vjs-has-started .vjs-control-bar`），只能靠源码顺序决胜。挪回 `src/index.css` 会让首屏样式表先加载、播放器样式表后加载，平局反转，Video.js 的默认控制条会盖在自绘控制层上。
+
 ## 本地数据与隐私
 
 NebulaPlay 当前没有账号和服务端数据库。以下信息保存在当前浏览器的 `localStorage`：
@@ -328,7 +336,11 @@ HOST=0.0.0.0 TVBOX_PROXY_ALLOWED_HOSTS=192.168.1.20 pnpm dev
 │   ├── history.ts               # 本地观看历史
 │   ├── playbackProgress.ts      # 续播判定
 │   ├── playlist.ts              # 本地片单
-│   ├── ui.tsx                   # 播放器与通用 UI
+│   ├── ui.tsx                   # 通用 UI(卡片、图标、徽章)
+│   ├── VideoPlayer.tsx          # Video.js 播放器与自绘控制层(懒加载 chunk)
+│   ├── videoPlayer.css          # video-js.css 的覆盖规则,须与其同 chunk
+│   ├── anime4kEnhancer.ts       # WebGPU 增强的渲染循环与降级策略
+│   ├── anime4kDoG.ts            # 内联的 Anime4K DoG 管线(WGSL 照搬上游,勿改)
 │   ├── views/                   # Home / Browse / Search / Detail / Player
 │   └── server/
 │       ├── tvboxProxy.ts        # 开发/生产共用的受限代理
@@ -382,6 +394,8 @@ MIT License **不覆盖**：
 - 第三方片源端点、订阅配置、服务名称与商标；
 - 依赖包中由各自许可证管理的代码；
 - 未经权利人授权提交到仓库的材料。
+
+仓库内含一处内联的第三方代码：`src/anime4kDoG.ts` 中的 4 段 WGSL 逐字取自 [Anime4K-WebGPU](https://github.com/Anime4KWebBoost/Anime4K-WebGPU)（MIT），算法源自 [Anime4K](https://github.com/bloc97/Anime4K)（MIT）。二者均为 MIT，与本仓库许可证兼容；文件头保留了出处与许可声明，修改或再分发时请一并保留。
 
 贡献代码即表示你有权提交该内容，并同意其按本项目 MIT License 分发。若你需要“禁止商业使用”，该限制不属于标准开源许可；请在发布前重新选择并由专业人士审阅许可证。
 
