@@ -100,7 +100,7 @@ export function Player({
         (error) =>
           alive &&
           setDetailError(
-            error instanceof Error ? error.message : "详情加载失败",
+            error instanceof Error ? error.message : "Не удалось загрузить информацию о фильме",
           ),
       )
       .finally(() => alive && setDetailLoading(false))
@@ -121,7 +121,7 @@ export function Player({
     request
       .then((list) => {
         if (!alive) return
-        if (!list.length) throw new Error("没有可播放线路")
+        if (!list.length) throw new Error("Нет доступных источников для воспроизведения")
         prefetchedSources.current.set(episodeKey, list)
         setPlayback((current) => ({
           episodeKey,
@@ -135,7 +135,7 @@ export function Player({
         if (!alive) return
         setPendingEpisodeKey(null)
         setPlayError(
-          error instanceof Error ? error.message : "播放线路加载失败",
+          error instanceof Error ? error.message : "Не удалось загрузить видеопоток",
         )
       })
     return () => {
@@ -180,15 +180,15 @@ export function Player({
   if (detailLoading || (!playback && playError === null)) {
     return (
       <PageLoading
-        label={`正在准备第 ${ep} 集`}
-        detail="影片详情与播放线路均就绪后将打开播放器"
+        label={`Подготавливаем серию ${ep}`}
+        detail="Плеер откроется, когда загрузятся сведения и видеопоток"
       />
     )
   }
   if (!t) {
     return (
       <p className="mx-auto max-w-[1440px] px-8 py-24 text-center text-[#9aa0b0]">
-        {detailError ?? "影片不存在。"}
+        {detailError ?? "Фильм не найден."}
       </p>
     )
   }
@@ -227,7 +227,7 @@ export function Player({
           {playError ? (
             <div className="grid aspect-video place-items-center rounded-xl bg-black px-6 text-center ring-1 ring-[#e0142c]/25">
               <div>
-                <p className="font-medium text-white">播放线路加载失败</p>
+                <p className="font-medium text-white">Не удалось загрузить видеопоток</p>
                 <p className="mt-2 text-sm text-[#9aa0b0]">{playError}</p>
                 <button
                   onClick={() => {
@@ -247,7 +247,7 @@ export function Player({
               <Suspense
                 fallback={
                   <div className="grid aspect-video place-items-center rounded-xl bg-black">
-                    <PageLoading label="正在载入播放器" compact />
+                    <PageLoading label="Загружаем плеер" compact />
                   </div>
                 }
               >
@@ -310,7 +310,7 @@ export function Player({
               </Suspense>
               {switchingEpisode && (
                 <span className="pointer-events-none absolute right-3 top-3 rounded-md bg-black/75 px-3 py-1.5 text-xs font-medium text-white backdrop-blur">
-                  正在切换至第 {ep} 集…
+                  Переключение на серию {ep}…
                 </span>
               )}
             </div>
@@ -337,7 +337,7 @@ export function Player({
               onClick={() => onOpen(t.id)}
               className="ml-auto text-sm text-[#9aa0b0] transition hover:text-[#ff3b52]"
             >
-              查看详情 →
+              Подробнее →
             </button>
           </div>
 
@@ -398,7 +398,7 @@ export function Player({
                   {t.synopsis}
                 </p>
                 <p className="mt-3 text-xs text-[#5a5f70]">
-                  主演:{t.cast.join(" / ")} · {t.region} · {t.year}
+                  В ролях: {t.cast.join(" / ")} · {t.region} · {t.year}
                 </p>
               </div>
             )}
@@ -414,7 +414,7 @@ export function Player({
                   播放列表
                 </h3>
                 <span className="text-xs text-[#5a5f70]">
-                  已更新 {t.airedEpisodes} / {total}
+                  Доступно серий: {t.airedEpisodes} из {total}
                 </span>
               </div>
               <EpisodePager
@@ -443,10 +443,10 @@ export function Player({
                           {String(e).padStart(2, "0")}
                         </span>
                         <span className="flex-1 truncate">
-                          第 {e} 集 {e === ep ? "· 正在播放" : ""}
+                          Серия {e} {e === ep ? "· Сейчас воспроизводится" : ""}
                         </span>
                         {e === ep && <IconPlay className="h-3.5 w-3.5" />}
-                        {!aired && <span className="text-[10px]">待更新</span>}
+                        {!aired && <span className="text-[10px]">Скоро</span>}
                       </button>
                     </li>
                   )
@@ -466,7 +466,7 @@ export function Player({
                 }
                 className="flex items-center gap-1 text-xs text-[#9aa0b0] transition hover:text-[#ff3b52]"
               >
-                换一批 <IconChevron className="h-3.5 w-3.5" />
+                Другие варианты <IconChevron className="h-3.5 w-3.5" />
               </button>
             </div>
             <div className="grid grid-cols-4 gap-2">
@@ -483,9 +483,9 @@ export function Player({
 
 function Comments() {
   const list = [
-    { u: "夜航星", t: "今晚这集的转折真的封神,剧情节奏拿捏得死死的!", l: 328 },
-    { u: "苏晚粉", t: "女主的演技越来越稳了,赤月那场戏看哭我。", l: 194 },
-    { u: "刀客Ray", t: "4K 画质在这平台是真的免费看,公益站点良心。", l: 156 },
+    { u: "Зритель", t: "Неожиданный поворот и отличный темп сюжета!", l: 328 },
+    { u: "Киноман", t: "Сильная актёрская игра и очень эмоциональная сцена.", l: 194 },
+    { u: "Любитель кино", t: "Отличное качество изображения.", l: 156 },
   ]
   return (
     <div className="space-y-4">
@@ -494,7 +494,7 @@ function Comments() {
           我
         </div>
         <input
-          placeholder="发一条友善的评论…"
+          placeholder="Оставьте доброжелательный комментарий…"
           className="flex-1 rounded-lg border border-white/8 bg-[#14161f] px-3 py-2 text-sm text-white placeholder:text-[#5a5f70] outline-none focus:border-[#e0142c]/50"
         />
         <button className="rounded-lg bg-[#e0142c] px-4 text-sm font-medium text-white">
@@ -509,7 +509,7 @@ function Comments() {
           <div>
             <p className="text-sm font-medium text-white">{c.u}</p>
             <p className="mt-0.5 text-sm text-[#c9ccd6]">{c.t}</p>
-            <p className="mt-1 text-xs text-[#5a5f70]">❤️ {c.l} · 回复</p>
+            <p className="mt-1 text-xs text-[#5a5f70]">❤️ {c.l} · Ответить</p>
           </div>
         </div>
       ))}
