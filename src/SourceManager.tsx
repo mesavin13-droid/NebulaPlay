@@ -130,7 +130,7 @@ function SourceList({
 }
 
 // 用户本次要接入的 TVBox 多线路订阅(肥猫等多仓聚合),预填在这里方便一键导入。
-const DEFAULT_TVBOX_SUB = 'https://gitlab.com/noimank/tvbox/-/raw/main/tvboxmuti.json'
+const DEFAULT_TVBOX_SUB = ''
 
 // 导入 TVBox 多线路订阅:拉取 urls 列表,勾选后批量存为自定义 TVBox 线路。
 function TvboxImport({
