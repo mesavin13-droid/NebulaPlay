@@ -10,7 +10,7 @@ import { useSourceHealth } from "./sourceHealth"
 import { buildCustomSources, useCustomSourceConfigs } from "./customSources"
 import { DEFAULT_SOURCE_ID, NAV, SOURCES, type VideoSource } from "./data"
 import { SourceManager } from "./SourceManager"
-import { ruLabel } from "./localization"
+import { ruLabel, ruMessage } from "./localization"
 import { TopNav } from "./TopNav"
 import { PageLoading } from "./PageLoading"
 import { useCatalog } from "./useCatalog"
@@ -284,7 +284,7 @@ function SourceError({
       <h2 className="mt-4 font-serif text-xl font-bold text-white">
         Не удалось загрузить источник «{name}»
       </h2>
-      <p className="mt-2 text-sm text-[#9aa0b0]">{error}</p>
+      <p className="mt-2 text-sm text-[#9aa0b0]">{ruMessage(error)}</p>
       <p className="mt-1 text-xs text-[#5a5f70]">
         Проверьте адрес источника и права доступа. Для запросов между доменами используется настроенный прокси.
       </p>
