@@ -626,7 +626,7 @@ function FilterRow({
       <span className="w-10 shrink-0 pt-1 text-sm text-[#5a5f70]">{label}</span>
       <div className="flex flex-wrap gap-1">
         {options.map((o) => (
-          <Pill key={ruLabel(o)} active={value === o} onClick={() => onChange(o)}>
+          <Pill key={o} active={value === o} onClick={() => onChange(o)}>
             {ruLabel(o)}
           </Pill>
         ))}
