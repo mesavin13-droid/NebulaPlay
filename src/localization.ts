@@ -47,6 +47,22 @@ const LABELS: Record<string, string> = {
   "全部分类": "Все категории",
   "其他": "Другое",
   "未知": "Неизвестно",
+  "中国大陆": "Китай",
+  "中国香港": "Гонконг",
+  "中国台湾": "Тайвань",
+  "中国澳门": "Макао",
+  "美国": "США",
+  "韩国": "Южная Корея",
+  "日本": "Япония",
+  "英国": "Великобритания",
+  "法国": "Франция",
+  "泰国": "Таиланд",
+  "印度": "Индия",
+  "新加坡": "Сингапур",
+  "德国": "Германия",
+  "加拿大": "Канада",
+  "俄罗斯": "Россия",
+  "澳大利亚": "Австралия",
   "全片": "Полный фильм",
   "动作": "Боевики",
   "喜剧": "Комедии",
@@ -81,6 +97,20 @@ const LABELS: Record<string, string> = {
 
 export function ruLabel(value: string): string {
   if (LABELS[value]) return LABELS[value]
+  if (/[\/、,，·]/.test(value)) {
+    const parts = value.split(/[\/、,，·]/).map((part) => part.trim()).filter(Boolean)
+    if (parts.length > 1 && parts.some((part) => LABELS[part])) {
+      return parts.map((part) => LABELS[part] ?? part).join(" / ")
+    }
+  }
+  const episodeUpdate = value.match(/更新至第?(\\d+)集/)
+  if (episodeUpdate) return "Обновление до серии " + episodeUpdate[1]
+  const episodeNumber = value.match(/第\\s*(\\d+)\\s*集/)
+  if (episodeNumber) return "Серия " + episodeNumber[1]
+  const episodeCount = value.match(/全(\\d+)集/)
+  if (episodeCount) return "Всего серий: " + episodeCount[1]
+  if (/完结|已完结/.test(value)) return "Завершён"
+  if (/更新中/.test(value)) return "Выходит"
   if (/纪录/.test(value)) return "Документальные"
   if (/动漫|动画|番剧|漫画/.test(value)) return "Аниме"
   if (/综艺|真人秀|脱口秀/.test(value)) return "Шоу"
