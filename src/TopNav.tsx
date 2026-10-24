@@ -156,7 +156,7 @@ function SourceSwitcher({
                         {s.name}
                       </span>
                       <span className="rounded bg-white/8 px-1.5 py-0.5 text-[10px] text-[#9aa0b0]">
-                        {s.badge}
+                        {ruLabel(s.badge)}
                       </span>
                       {s.online && (
                         <span className="h-1.5 w-1.5 rounded-full bg-[#3fbf6a]" title="Онлайн-источник" />
