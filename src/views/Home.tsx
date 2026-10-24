@@ -247,7 +247,7 @@ function ContinueWatching({
             <div
               role="button"
               tabIndex={0}
-              aria-label={`Продолжить просмотр: ${item.name}, ${item.ep}`}
+              aria-label={`Продолжить просмотр: ${item.name}, ${ruLabel(item.ep)}`}
               onClick={() => onPlay(item.titleId, historyEpisode(item))}
               onKeyDown={(event) => {
                 if (event.key !== "Enter" && event.key !== " ") return
@@ -286,7 +286,7 @@ function ContinueWatching({
             </div>
             <p className="mt-1.5 truncate text-sm text-white">{item.name}</p>
             <p className="text-[11px] text-[#9aa0b0]">
-              {item.ep} · {item.progress}%
+              {ruLabel(item.ep)} · {item.progress}%
             </p>
           </div>
         ))}
