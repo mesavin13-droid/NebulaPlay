@@ -162,7 +162,7 @@ export function PosterCard({
 
         <div className="absolute inset-x-2 bottom-2">
           <p className="truncate text-sm font-medium text-white">{t.name}</p>
-          {t.latest && <p className="truncate text-[11px] text-[#ff3b52]">{t.latest}</p>}
+          {t.latest && <p className="truncate text-[11px] text-[#ff3b52]">{ruLabel(t.latest)}</p>}
         </div>
       </div>
     </button>
@@ -187,7 +187,7 @@ export function LandscapeCard({ t, onOpen }: { t: Title; onOpen: (id: string) =>
         <div className="absolute inset-x-2 bottom-2">
           <p className="truncate text-sm font-medium text-white">{t.name}</p>
           <p className="text-[11px] text-[#9aa0b0]">
-            {t.genres.join(' · ')} · {t.year}
+            {t.genres.map(ruLabel).join(' · ')} · {t.year}
           </p>
         </div>
       </div>
