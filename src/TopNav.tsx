@@ -118,7 +118,7 @@ function SourceSwitcher({
         className="flex items-center gap-2 rounded-lg border border-white/8 bg-white/5 py-1.5 pl-2.5 pr-2 text-sm text-white transition hover:border-[#e0142c]/40"
       >
         <span className="grid h-4 w-4 place-items-center rounded-sm bg-[#e0142c] text-[9px] font-bold">
-          源
+          И
         </span>
         <span className="max-w-[7rem] truncate font-medium">{current?.name ?? 'Проверяем источники…'}</span>
         <IconChevron className={`h-4 w-4 text-[#9aa0b0] transition ${open ? 'rotate-90' : ''}`} />
