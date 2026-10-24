@@ -1096,7 +1096,7 @@ function QualityMenu({
 }) {
   const [open, setOpen] = useState(false)
   if (list.length <= 1) {
-    return <span className="text-xs text-[#c9ccd6]">{list[0]?.label ?? 'Стандартное'}</span>
+    return <span className="text-xs text-[#c9ccd6]">{ruLabel(list[0]?.label ?? 'Стандартное')}</span>
   }
   return (
     <div className="relative">
