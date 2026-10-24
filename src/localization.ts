@@ -93,6 +93,23 @@ const LABELS: Record<string, string> = {
   "港台剧": "Сериалы Гонконга и Тайваня",
   "欧美剧": "Западные сериалы",
   "日韩剧": "Японские и корейские сериалы",
+  "中国大陆": "Китай",
+  "中国香港": "Гонконг",
+  "中国台湾": "Тайвань",
+  "美国": "США",
+  "英国": "Великобритания",
+  "日本": "Япония",
+  "韩国": "Южная Корея",
+  "法国": "Франция",
+  "德国": "Германия",
+  "印度": "Индия",
+  "泰国": "Таиланд",
+  "俄罗斯": "Россия",
+  "意大利": "Италия",
+  "西班牙": "Испания",
+  "加拿大": "Канада",
+  "澳大利亚": "Австралия",
+  "新加坡": "Сингапур",
 };
 
 export function ruLabel(value: string): string {
@@ -111,6 +128,23 @@ export function ruLabel(value: string): string {
   if (episodeCount) return "Всего серий: " + episodeCount[1]
   if (/完结|已完结/.test(value)) return "Завершён"
   if (/更新中/.test(value)) return "Выходит"
+  if (/中国大陆/.test(value)) return value.replace(/中国大陆/g, "Китай")
+  if (/中国香港/.test(value)) return value.replace(/中国香港/g, "Гонконг")
+  if (/中国台湾/.test(value)) return value.replace(/中国台湾/g, "Тайвань")
+  if (/美国/.test(value)) return value.replace(/美国/g, "США")
+  if (/英国/.test(value)) return value.replace(/英国/g, "Великобритания")
+  if (/日本/.test(value)) return value.replace(/日本/g, "Япония")
+  if (/韩国/.test(value)) return value.replace(/韩国/g, "Южная Корея")
+  if (/法国/.test(value)) return value.replace(/法国/g, "Франция")
+  if (/德国/.test(value)) return value.replace(/德国/g, "Германия")
+  if (/印度/.test(value)) return value.replace(/印度/g, "Индия")
+  if (/泰国/.test(value)) return value.replace(/泰国/g, "Таиланд")
+  if (/俄罗斯/.test(value)) return value.replace(/俄罗斯/g, "Россия")
+  if (/意大利/.test(value)) return value.replace(/意大利/g, "Италия")
+  if (/西班牙/.test(value)) return value.replace(/西班牙/g, "Испания")
+  if (/加拿大/.test(value)) return value.replace(/加拿大/g, "Канада")
+  if (/澳大利亚/.test(value)) return value.replace(/澳大利亚/g, "Австралия")
+  if (/新加坡/.test(value)) return value.replace(/新加坡/g, "Сингапур")
   if (/纪录/.test(value)) return "Документальные"
   if (/动漫|动画|番剧|漫画/.test(value)) return "Аниме"
   if (/综艺|真人秀|脱口秀/.test(value)) return "Шоу"
