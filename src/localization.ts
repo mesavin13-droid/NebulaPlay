@@ -47,6 +47,10 @@ const LABELS: Record<string, string> = {
   "全部分类": "Все категории",
   "其他": "Другое",
   "未知": "Неизвестно",
+  "默认": "По умолчанию",
+  "正片": "Полный фильм",
+  "多线路订阅": "Подписка на несколько источников",
+  "自动选择可用站点": "Автоматический выбор доступного источника",
   "中国大陆": "Китай",
   "中国香港": "Гонконг",
   "中国台湾": "Тайвань",
@@ -105,14 +109,22 @@ export function ruLabel(value: string): string {
       return parts.map((part) => LABELS[part] ?? part).join(" / ")
     }
   }
-  const episodeUpdate = value.match(/更新至第?([0-9]+)集/)
+  const episodeUpdate = value.match(/更新至第?\s*([0-9]+)\s*集/)
   if (episodeUpdate) return "Обновление до серии " + episodeUpdate[1]
-  const episodeNumber = value.match(/第[ ]*([0-9]+)[ ]*集/)
+  const episodeNumber = value.match(/第\s*([0-9]+)\s*集/)
   if (episodeNumber) return "Серия " + episodeNumber[1]
-  const episodeCount = value.match(/全([0-9]+)集/)
+  const episodeCount = value.match(/全\s*([0-9]+)\s*集/)
   if (episodeCount) return "Всего серий: " + episodeCount[1]
-  if (/完结|已完结/.test(value)) return "Завершён"
+  if (/完结|已完结|已结束/.test(value)) return "Завершён"
   if (/更新中/.test(value)) return "Выходит"
+  if (/待更新|未更新|即将更新/.test(value)) return "Скоро"
+  const lineNumber = value.match(/^线路\s*(\d+)$/)
+  if (lineNumber) return "Источник " + lineNumber[1]
+  if (/多线路订阅/.test(value) && /自动选择可用站点/.test(value)) {
+    return "Подписка на несколько источников · автоматический выбор доступного"
+  }
+  if (/多线路订阅/.test(value)) return "Подписка на несколько источников"
+  if (/自动选择可用站点/.test(value)) return "Автоматический выбор доступного источника"
   if (/中国大陆/.test(value)) return value.replace(/中国大陆/g, "Китай")
   if (/中国香港/.test(value)) return value.replace(/中国香港/g, "Гонконг")
   if (/中国台湾/.test(value)) return value.replace(/中国台湾/g, "Тайвань")
