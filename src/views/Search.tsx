@@ -90,7 +90,7 @@ export function Search({
           setRemoteState({
             key: searchKey,
             items: [],
-            error: e instanceof Error ? e.message : "搜索失败",
+            error: e instanceof Error ? e.message : "Не удалось выполнить поиск",
           })
         })
     }, 280)
@@ -163,7 +163,7 @@ export function Search({
           ref={inputRef}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder="搜索影片、演员、导演、类型…"
+          placeholder="Название фильма, актёр, режиссёр или жанр…"
           className="min-w-0 flex-1 bg-transparent text-base text-white placeholder:text-[#5a5f70] outline-none"
         />
         {draft && (
@@ -175,7 +175,7 @@ export function Search({
               inputRef.current?.focus()
             }}
             className="grid h-6 w-6 place-items-center rounded-full text-[#9aa0b0] transition hover:bg-white/10 hover:text-white"
-            aria-label="清空"
+            aria-label="Очистить"
           >
             <X className="h-4 w-4" />
           </button>
@@ -227,8 +227,8 @@ export function Search({
       ) : searching ? (
         <PageLoading
           compact
-          label={`正在全库搜索「${query}」`}
-          detail="本地命中与远程结果合并完成后将一次展示"
+          label={`Ищем по всему каталогу: «${query}»`}
+          detail="Объединяем результаты из каталога и внешнего источника"
         />
       ) : results.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-center">
@@ -236,12 +236,12 @@ export function Search({
             <SearchIcon className="h-6 w-6" />
           </div>
           <h2 className="mt-4 font-serif text-xl font-bold text-white">
-            没有找到与「{query}」相关的影片
+            По запросу «{query}» ничего не найдено
           </h2>
           <p className="mt-2 max-w-sm text-sm text-[#9aa0b0]">
             {searchErr
-              ? `远程搜索失败:${searchErr}`
-              : "换个关键词试试,或从下方热门搜索里挑一个。"}
+              ? `Ошибка поиска во внешнем источнике: ${searchErr}`
+              : "Попробуйте другой запрос или выберите популярную тему ниже."}
           </p>
           {hot.length > 0 && (
             <div className="mt-5 flex flex-wrap justify-center gap-2">
@@ -255,13 +255,13 @@ export function Search({
         <div className="mt-6">
           <div className="mb-4 flex flex-wrap items-center gap-3">
             <h2 className="font-serif text-lg font-bold text-white">
-              「{query}」的搜索结果
+              Результаты поиска: «{query}»
             </h2>
             <span className="text-sm text-[#5a5f70]">
-              共 {results.length} 部
+              Найдено: {results.length}
             </span>
             {source?.search && !searching && remote.length > 0 && (
-              <span className="text-xs text-[#5a5f70]">含远程全库结果</span>
+              <span className="text-xs text-[#5a5f70]">Включены результаты внешнего каталога</span>
             )}
           </div>
           <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
