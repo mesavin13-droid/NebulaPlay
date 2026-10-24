@@ -11,7 +11,7 @@
 [![Vite](https://img.shields.io/badge/Vite-8-646cff.svg?logo=vite&logoColor=white)](https://vite.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-06b6d4.svg?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![License](https://img.shields.io/badge/license-MIT-22c55e.svg)](./LICENSE)
-[![Website](https://img.shields.io/badge/website-nebu.life-e0142c.svg)](https://nebu.life)
+[![Project](https://img.shields.io/badge/project-CINEMA-e0142c.svg)](https://github.com/mesavin13-droid/NebulaPlay)
 
 [在线站点](#在线站点) · [项目初衷](#项目初衷) · [功能一览](#功能一览) · [快速开始](#快速开始) · [片源接入](#片源接入) · [公益入口](#公益入口宝贝回家) · [参与贡献](#开发与贡献)
 
