@@ -258,7 +258,7 @@ function normalizeTitle(raw: any, i: number, fallbackPlayUrl?: string): Title {
 
   return {
     id: String(pick("id", "vod_id") ?? `x${i}`),
-    name: String(pick("name", "title", "vod_name") ?? `影片 ${i + 1}`),
+    name: String(pick("name", "title", "vod_name") ?? `Фильм ${i + 1}`),
     sub: pick("sub", "subtitle", "vod_sub")
       ? String(pick("sub", "subtitle", "vod_sub"))
       : undefined,
@@ -355,7 +355,7 @@ export function makeCustomSource(cfg: CustomSourceConfig): VideoSource {
     id: cfg.id,
     name: cfg.name,
     badge: "自定义",
-    tagline: cfg.tagline ?? "手动配置的片源",
+    tagline: cfg.tagline ?? "Настраиваемый источник",
     online: !!cfg.catalogUrl,
     nav: NAV,
     get filters() {
