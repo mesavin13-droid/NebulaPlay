@@ -3,7 +3,6 @@ import {
   ExternalLink,
   GitFork,
   Heart,
-  HeartHandshake,
   Star,
 } from "lucide-react"
 import { BUILTIN_LINES, BUILTIN_TVBOX_SOURCES } from "./builtinSources"
@@ -11,6 +10,7 @@ import { useSourceHealth } from "./sourceHealth"
 import { buildCustomSources, useCustomSourceConfigs } from "./customSources"
 import { DEFAULT_SOURCE_ID, NAV, SOURCES, type VideoSource } from "./data"
 import { SourceManager } from "./SourceManager"
+import { ruLabel } from "./localization"
 import { TopNav } from "./TopNav"
 import { PageLoading } from "./PageLoading"
 import { useCatalog } from "./useCatalog"
@@ -29,7 +29,6 @@ type View =
 
 const SITE_URL = "https://github.com/mesavin13-droid/NebulaPlay"
 const REPOSITORY_URL = "https://github.com/mesavin13-droid/NebulaPlay"
-const BABY_HOME_URL = "https://baobeihuijia.com/"
 
 const FOOTER_COLUMNS = [
   {
@@ -61,7 +60,7 @@ export default function App() {
     new Set(),
   )
 
-  // 内置片源 + 预置 TVBox 源（自动探活过滤失活源）+ Сделано с户自定义源。
+  // Встроенные источники отключены; остаются проверенные и добавленные пользователем источники.
   const customConfigs = useCustomSourceConfigs()
   const customSources = useMemo(
     () => buildCustomSources(customConfigs),
@@ -257,15 +256,15 @@ export default function App() {
 function loadingLabel(view: View) {
   switch (view.name) {
     case "home":
-      return "正在加载首页"
+      return "Загружаем главную страницу"
     case "browse":
-      return "正在加载分类内容"
+      return "Загружаем каталог"
     case "search":
-      return "正在准备搜索"
+      return "Подготавливаем поиск"
     case "detail":
-      return "正在加载影片详情"
+      return "Загружаем информацию о фильме"
     case "player":
-      return "正在准备播放器"
+      return "Подготавливаем плеер"
   }
 }
 
@@ -343,42 +342,6 @@ function Footer({
 }) {
   return (
     <footer className="border-t border-white/6 bg-[#0a0b12]">
-      <section
-        className="border-b border-white/6 bg-[#0d0f16]"
-        aria-labelledby="baby-home-title"
-      >
-        <div className="mx-auto flex max-w-[1440px] flex-col gap-5 px-4 py-7 sm:flex-row sm:items-center sm:justify-between lg:px-8">
-          <div className="flex max-w-3xl items-start gap-4">
-            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg border border-[#e0142c]/25 bg-[#e0142c]/10 text-[#ff3b52]">
-              <HeartHandshake className="h-5 w-5" aria-hidden="true" />
-            </span>
-            <div>
-              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                <h2
-                  id="baby-home-title"
-                  className="font-serif text-lg font-bold text-white"
-                >
-                  宝贝回家
-                </h2>
-                <span className="text-xs text-[#e8b23a]">Официальный благотворительный ресурс</span>
-              </div>
-              <p className="mt-1.5 text-sm leading-6 text-[#9aa0b0]">
-                Если вы ищете близкого человека или хотите сообщить информацию, перейдите на официальный сайт. CINEMA не собирает и не публикует персональные данные.
-              </p>
-            </div>
-          </div>
-          <a
-            href={BABY_HOME_URL}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex shrink-0 items-center gap-2 self-start text-sm font-medium text-white transition hover:text-[#ff3b52] sm:self-center"
-          >
-            Открыть официальный сайт
-            <ExternalLink className="h-4 w-4" aria-hidden="true" />
-            <span className="sr-only">（在新窗口打开）</span>
-          </a>
-        </div>
-      </section>
 
       <div className="mx-auto max-w-[1440px] px-4 py-10 lg:px-8 lg:py-12">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:gap-16">
@@ -419,11 +382,11 @@ function Footer({
                   className="ml-1 h-4 w-4 text-[#6b7080] transition group-hover:text-[#e0142c]"
                   aria-hidden="true"
                 />
-                <span className="sr-only">（在新窗口打开）</span>
+                <span className="sr-only">(откроется в новой вкладке)</span>
               </a>
               <span className="inline-flex items-center gap-1.5 text-xs text-[#5a5f70]">
                 <GitFork className="h-3.5 w-3.5" aria-hidden="true" />
-                Исходный проект NebulaPlay · лицензия MIT
+                Исходный код · лицензия MIT
               </span>
             </div>
           </div>
