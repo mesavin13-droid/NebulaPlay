@@ -25,6 +25,7 @@ import { PageLoading } from "../PageLoading"
 import { usePlaylist } from "../playlist"
 import type { Catalog } from "../useCatalog"
 import { IconPlay, IconStar, Img, PosterCard, Pill } from "../ui"
+import { ruLabel } from "../localization"
 
 // 侧栏内容类别跟随当前片源返回的分类(推荐/经典重温为本地合成入口,常驻)。
 const CONTENT_FALLBACK = ["电影", "剧集", "动漫", "综艺", "纪录片"]
@@ -171,11 +172,11 @@ export function Browse({
         if (cancelled) return
         setRemoteItems(r.items)
         setHasMore(r.hasMore)
-        if (!r.items.length) setStatus("该分类暂无内容")
+        if (!r.items.length) setStatus("В этой категории пока нет фильмов")
       })
       .catch((e) => {
         if (cancelled) return
-        setStatus(e instanceof Error ? e.message : "加载失败")
+        setStatus(e instanceof Error ? e.message  : "Не удалось загрузить каталог")
       })
       .finally(() => {
         if (!cancelled) setResolvedQueryKey(queryKey)
@@ -260,13 +261,13 @@ export function Browse({
       setHasMore(r.hasMore)
       setStatus(
         r.items.length > 0
-          ? `已加载 ${r.items.length} 部`
+          ? `Загружено: ${r.items.length}`
           : r.hasMore
-            ? "本页没有新内容,可继续查询"
-            : "没有更多了",
+            ? "На этой странице новых фильмов нет. Попробуйте загрузить ещё."
+            : "Больше результатов нет",
       )
     } catch (e) {
-      setStatus(e instanceof Error ? e.message : "加载失败")
+      setStatus(e instanceof Error ? e.message  : "Не удалось загрузить каталог")
     } finally {
       setLoadingMore(false)
     }
@@ -288,7 +289,7 @@ export function Browse({
         })
         total += r.items.length
         rounds += 1
-        setStatus(`全查询中…已新增 ${total} 部`)
+        setStatus(`Загрузка всего каталога… добавлено: ${total}`)
         // 只有确认到底才停;前 1-2 轮可能出现「本页都是已加载内容」的重复页。
         if (!r.hasMore) {
           setHasMore(false)
@@ -296,9 +297,9 @@ export function Browse({
         }
         if (r.items.length === 0 && rounds >= 2) break
       }
-      setStatus(total > 0 ? `全查询完成,共新增 ${total} 部` : "没有更多了")
+      setStatus(total > 0 ? `Загрузка завершена. Добавлено: ${total}` : "Больше результатов нет")
     } catch (e) {
-      setStatus(e instanceof Error ? e.message : "全查询失败")
+      setStatus(e instanceof Error ? e.message : "Не удалось загрузить весь каталог")
     } finally {
       setLoadingAll(false)
     }
@@ -324,7 +325,7 @@ export function Browse({
             }`}
           >
             <Icon className="h-[18px] w-[18px]" />
-            {label}
+            {ruLabel(label)}
           </button>
         ))}
       </aside>
@@ -347,19 +348,19 @@ export function Browse({
           <>
             <div className="rounded-xl border border-white/6 bg-[#0e1018] p-4">
               <FilterRow
-                label="类型"
+                label="Жанр"
                 options={genreOptions}
                 value={genre}
                 onChange={setGenre}
               />
               <FilterRow
-                label="地区"
+                label="Страна"
                 options={regionOptions}
                 value={region}
                 onChange={setRegion}
               />
               <FilterRow
-                label="年份"
+                label="Год"
                 options={yearOptions}
                 value={year}
                 onChange={setYear}
@@ -375,7 +376,7 @@ export function Browse({
                       active={sort === s}
                       onClick={() => setSort(s)}
                     >
-                      {s}
+                      {ruLabel(s)}
                     </Pill>
                   ))}
                 </div>
@@ -409,10 +410,10 @@ export function Browse({
 
             <div className="mb-4 mt-8 flex items-center gap-3">
               <h2 className="font-serif text-lg font-bold text-white">
-                {side === "推荐" ? "为你推荐" : side}
+                {ruLabel(side === "推荐" ? "为你推荐" : side)}
               </h2>
               <span className="text-sm text-[#5a5f70]">
-                共 {list.length} 部
+                Всего: {list.length}
               </span>
             </div>
 
@@ -422,7 +423,7 @@ export function Browse({
               </div>
             ) : list.length === 0 ? (
               <p className="py-16 text-center text-[#5a5f70]">
-                当前「{side}」分类下暂无影片,试试切换片源或放宽筛选。
+                В категории «{side}» пока нет фильмов. Попробуйте другой источник или ослабьте фильтры.
               </p>
             ) : (
               <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
@@ -441,17 +442,17 @@ export function Browse({
                     className="rounded-xl bg-[#e0142c] px-5 py-2 text-sm font-bold text-white transition hover:bg-[#ff3b52] disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     {loadingMore
-                      ? "加载中…"
+                      ? "Загрузка…"
                       : hasMore
-                        ? "查询更多"
-                        : "没有更多"}
+                        ? "Загрузить ещё"
+                        : "Больше нет"}
                   </button>
                   <button
                     onClick={loadAll}
                     disabled={loadingMore || loadingAll || !hasMore}
                     className="rounded-xl border border-white/15 bg-white/5 px-5 py-2 text-sm font-bold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    {loadingAll ? "全查询中…" : "全查询"}
+                    {loadingAll ? "Загружаем всё…" : "Загрузить весь каталог"}
                   </button>
                 </div>
                 {status && <p className="text-xs text-[#9aa0b0]">{status}</p>}
@@ -480,8 +481,8 @@ function LocalTab({
     return (
       <EmptyLocal
         icon={Heart}
-        title="还没有收藏的影片"
-        desc="在影片详情页点击「收藏」，之后就能在这里找到它们。"
+        title="В избранном пока нет фильмов"
+        desc="Нажмите «В избранное» на странице фильма, чтобы он появился здесь."
       />
     )
   }
@@ -491,8 +492,8 @@ function LocalTab({
       return (
         <EmptyLocal
           icon={ListVideo}
-          title="我的片单是空的"
-          desc="在首页横幅或影片上点击「加入片单」，之后就能在这里找到它们。"
+          title="Ваш список фильмов пока пуст"
+          desc="Нажмите «В мой список» на главном экране или на карточке фильма."
         />
       )
     }
@@ -501,7 +502,7 @@ function LocalTab({
         <div className="mb-4 flex items-center gap-3">
           <h2 className="font-serif text-lg font-bold text-white">我的片单</h2>
           <span className="text-sm text-[#5a5f70]">
-            共 {playlist.length} 部 · 本地保存
+            Всего: {playlist.length} · сохранено на устройстве
           </span>
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
@@ -533,13 +534,13 @@ function LocalTab({
     )
   }
 
-  const heading = "观看历史"
+  const heading = "История просмотров"
   if (history.length === 0) {
     return (
       <EmptyLocal
         icon={Clock3}
-        title={`${heading}是空的`}
-        desc="播放任意影片后，你的观看记录会自动保存在本地并显示在这里。"
+        title={`История просмотров пока пуста`}
+        desc="После просмотра фильма запись автоматически сохранится на устройстве и появится здесь."
       />
     )
   }
@@ -549,7 +550,7 @@ function LocalTab({
       <div className="mb-4 flex items-center gap-3">
         <h2 className="font-serif text-lg font-bold text-white">{heading}</h2>
         <span className="text-sm text-[#5a5f70]">
-          共 {history.length} 条 · 本地保存
+          Записей: {history.length} · сохранено на устройстве
         </span>
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
