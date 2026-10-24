@@ -327,7 +327,7 @@ function SourceForm({
 
     onSubmit({
       id: initial?.id,
-      kind: effectiveKind, // 保留 TVBox 线路标记,避免Изменить后退回通用解析
+      kind: effectiveKind, // Сохраняем признак линии TVBox, чтобы после редактирования не переключать её на обычный разбор.
       name: name.trim(),
       tagline: tagline.trim() || undefined,
       catalogUrl: catalogUrl.trim() || undefined,
