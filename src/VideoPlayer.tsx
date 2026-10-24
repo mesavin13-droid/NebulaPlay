@@ -21,6 +21,7 @@ import {
   type Anime4KHandle,
 } from './anime4kEnhancer'
 import { type PlaySource } from './data'
+import { ruLabel } from './localization'
 import {
   DEFAULT_PLAYBACK_PREFERENCES,
   type PlaybackPreferences,
