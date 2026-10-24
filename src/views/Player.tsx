@@ -238,7 +238,7 @@ export function Player({
                   }}
                   className="mt-4 rounded-lg bg-[#e0142c] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#ff3b52]"
                 >
-                  重试
+                  Повторить
                 </button>
               </div>
             </div>
@@ -321,7 +321,7 @@ export function Player({
               onClick={onBack}
               className="text-sm text-[#9aa0b0] transition hover:text-white"
             >
-              ← 返回
+              ← Назад
             </button>
             <h1 className="font-serif text-2xl font-bold text-white">
               {t.name}
