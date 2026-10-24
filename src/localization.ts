@@ -164,7 +164,7 @@ export function ruLabel(value: string): string {
 export function ruMessage(message: string | null | undefined): string {
   const value = (message ?? "").trim()
   if (!value) return "Произошла неизвестная ошибка."
-  if (!/[\\u3400-\\u9fff]/.test(value)) return value
+  if (!/[\u3400-\u9fff]/.test(value)) return value
 
   const line = value.match(/线路「([^」]+)」/)
   const source = value.match(/片源「([^」]+)」/)
