@@ -339,7 +339,7 @@ function SourceForm({
   return (
     <div className="max-h-[70vh] space-y-4 overflow-y-auto p-5">
       {initial?.kind !== 'tvbox' && (
-        <Field label="接入方式">
+        <Field label="Способ подключения">
           <select
             value={kind}
             onChange={(event) => setKind(event.target.value as 'json' | 'cms-api')}
