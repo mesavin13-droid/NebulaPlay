@@ -61,7 +61,7 @@ export type BrowseFilters = {
 }
 
 export const ratingLabel = (title: Pick<Title, "rating" | "ratingKnown">) =>
-  title.ratingKnown === false ? "暂无评分" : title.rating.toFixed(1)
+  title.ratingKnown === false ? "Нет оценки" : title.rating.toFixed(1)
 
 // ---- 片源接口 --------------------------------------------------------------
 // 所有取数方法都是异步的,方便后续用真实的、你有授权的远程 API 直接替换实现。
@@ -279,7 +279,7 @@ function normalizeTitle(raw: any, i: number, fallbackPlayUrl?: string): Title {
     airedEpisodes: 1,
     latest: String(pick("latest", "vod_remarks") ?? "全片"),
     synopsis: String(
-      pick("synopsis", "desc", "blurb", "vod_content") ?? "暂无简介。",
+      pick("synopsis", "desc", "blurb", "vod_content") ?? "Описание отсутствует.",
     ),
     cast,
     playUrl: playUrl || fallbackPlayUrl || undefined,
