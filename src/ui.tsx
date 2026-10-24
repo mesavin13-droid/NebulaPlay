@@ -12,6 +12,7 @@ import {
   Star,
 } from 'lucide-react'
 import { ratingLabel, type Title } from './data'
+import { ruLabel } from './localization'
 
 // ---- Image with graceful fallback -----------------------------------------
 export function Img({
@@ -117,7 +118,7 @@ export function SectionHeader({
 export function QualityBadge({ q }: { q: Title['quality'] }) {
   const color =
     q === '4K' ? 'bg-[#e0142c] text-white' : q === '蓝光' ? 'bg-[#e8b23a] text-black' : 'bg-white/15 text-white'
-  return <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold leading-none ${color}`}>{q}</span>
+  return <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold leading-none ${color}`}>{ruLabel(q)}</span>
 }
 
 // ---- Poster card -----------------------------------------------------------
