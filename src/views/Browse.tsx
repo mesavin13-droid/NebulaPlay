@@ -341,8 +341,8 @@ export function Browse({
         ) : querying ? (
           <PageLoading
             compact
-            label={`正在加载「${side}」`}
-            detail="筛选与影片列表准备完成后将一次展示"
+            label={`Загружаем раздел «${ruLabel(side)}»`}
+            detail="Результаты появятся после загрузки фильтров и списка фильмов"
           />
         ) : (
           <>
@@ -500,7 +500,7 @@ function LocalTab({
     return (
       <div>
         <div className="mb-4 flex items-center gap-3">
-          <h2 className="font-serif text-lg font-bold text-white">我的片单</h2>
+          <h2 className="font-serif text-lg font-bold text-white">Мой список</h2>
           <span className="text-sm text-[#5a5f70]">
             Всего: {playlist.length} · сохранено на устройстве
           </span>
