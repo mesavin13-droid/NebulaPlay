@@ -162,7 +162,7 @@ function SourceSwitcher({
                         <span className="h-1.5 w-1.5 rounded-full bg-[#3fbf6a]" title="Онлайн-источник" />
                       )}
                     </span>
-                    <span className="mt-0.5 block truncate text-xs text-[#5a5f70]">{s.tagline}</span>
+                    <span className="mt-0.5 block truncate text-xs text-[#5a5f70]">{ruLabel(s.tagline)}</span>
                   </span>
                   {activeSrc && <span className="mt-1 text-xs text-[#ff3b52]">Выбран</span>}
                 </button>
