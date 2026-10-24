@@ -75,9 +75,9 @@ export function Logo({ onClick }: { onClick?: () => void }) {
         </svg>
       </span>
       <span className="font-display text-xl font-bold tracking-wide text-white">
-        Nebula<span className="text-[#e0142c]">Play</span>
+        CINEMA
       </span>
-      <span className="ml-0.5 font-serif text-lg font-bold text-white/90">星幕</span>
+      
     </button>
   )
 }
