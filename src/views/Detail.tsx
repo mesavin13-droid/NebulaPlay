@@ -380,7 +380,7 @@ function TrendPanel({ trend }: { trend: RatingPoint[] }) {
       <div className="mt-1 flex justify-between text-[10px] text-[#5a5f70]">
         {trend.map((p, i) => (
           <span key={i}>
-            {p.d.replace("第", "Серия ").replace("集", "").replace("幕", "")}
+            {p.d.replace("第", "").replace("集", " серия").replace("幕", " сцена")}
           </span>
         ))}
       </div>
