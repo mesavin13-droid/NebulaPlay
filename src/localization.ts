@@ -103,11 +103,11 @@ export function ruLabel(value: string): string {
       return parts.map((part) => LABELS[part] ?? part).join(" / ")
     }
   }
-  const episodeUpdate = value.match(/更新至第?(\\d+)集/)
+  const episodeUpdate = value.match(/更新至第?([0-9]+)集/)
   if (episodeUpdate) return "Обновление до серии " + episodeUpdate[1]
-  const episodeNumber = value.match(/第\\s*(\\d+)\\s*集/)
+  const episodeNumber = value.match(/第[ ]*([0-9]+)[ ]*集/)
   if (episodeNumber) return "Серия " + episodeNumber[1]
-  const episodeCount = value.match(/全(\\d+)集/)
+  const episodeCount = value.match(/全([0-9]+)集/)
   if (episodeCount) return "Всего серий: " + episodeCount[1]
   if (/完结|已完结/.test(value)) return "Завершён"
   if (/更新中/.test(value)) return "Выходит"
