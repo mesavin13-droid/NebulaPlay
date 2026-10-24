@@ -74,7 +74,7 @@ export function TopNav({
           </form>
 
           <span className="hidden items-center gap-1.5 whitespace-nowrap rounded-full border border-[#3fbf6a]/30 bg-[#3fbf6a]/10 px-3 py-1.5 text-sm font-medium text-[#7fe3a3] sm:flex">
-            免费公益 · 无需登录
+            CINEMA · 授权内容
           </span>
 
           <button className="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-[#e0142c] to-[#7a0a18] text-sm font-bold text-white ring-2 ring-white/10">
