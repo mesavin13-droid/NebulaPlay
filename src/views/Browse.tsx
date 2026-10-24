@@ -367,7 +367,7 @@ export function Browse({
               />
               <div className="flex items-center gap-2 pt-2">
                 <span className="w-10 shrink-0 text-sm text-[#5a5f70]">
-                  排序
+                  Сортировка
                 </span>
                 <div className="flex flex-wrap gap-1">
                   {SORTS.map((s) => (
