@@ -347,8 +347,7 @@ function Footer({
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:gap-16">
           <div className="max-w-xl">
             <span className="font-display text-xl font-bold text-white">
-              Nebula<span className="text-[#e0142c]">Play</span>{" "}
-              <span className="font-serif text-lg">星幕</span>
+              CINEMA
             </span>
             <p className="mt-4 max-w-lg text-sm leading-6 text-[#9aa0b0]">
               CINEMA — видеокаталог с поиском, карточками фильмов и встроенным плеером. Каталог подключается через настраиваемые источники, а настройки и история просмотров хранятся в этом браузере.
@@ -404,7 +403,7 @@ function Footer({
                       onClick={() => onNav(label)}
                       className="text-[#9aa0b0] transition hover:text-[#ff3b52]"
                     >
-                      {label}
+                      {ruLabel(label)}
                     </button>
                   </li>
                 ))}
