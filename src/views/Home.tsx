@@ -326,7 +326,7 @@ function HeroBanner({
         <div className="max-w-lg">
           <div className="mb-3 flex items-center gap-2">
             <span className="rounded bg-[#e0142c] px-2 py-0.5 text-xs font-bold text-white">
-              {hero.quality}
+              {ruLabel(hero.quality)}
             </span>
             <span className="rounded bg-white/10 px-2 py-0.5 text-xs text-white/90">
               Премьера
@@ -347,8 +347,8 @@ function HeroBanner({
             {hero.synopsis}
           </p>
           <p className="mt-2 text-xs text-[#9aa0b0]">
-            {hero.genres.join(" · ")} · {hero.region} · {hero.year} ·{" "}
-            {hero.latest}
+            {hero.genres.map(ruLabel).join(" · ")} · {ruLabel(hero.region)} · {hero.year} ·{" "}
+            {ruLabel(hero.latest)}
           </p>
 
           <div className="mt-5 flex items-center gap-3">
