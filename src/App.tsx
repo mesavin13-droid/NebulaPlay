@@ -6,6 +6,7 @@ import {
   Star,
 } from "lucide-react"
 import { BUILTIN_LINES, BUILTIN_TVBOX_SOURCES } from "./builtinSources"
+import { OPEN_MOVIES_SOURCE } from "./openCatalog"
 import { useSourceHealth } from "./sourceHealth"
 import { buildCustomSources, useCustomSourceConfigs } from "./customSources"
 import { DEFAULT_SOURCE_ID, NAV, SOURCES, type VideoSource } from "./data"
@@ -79,7 +80,7 @@ export default function App() {
     [liveUrlSet],
   )
   const allSources = useMemo<VideoSource[]>(
-    () => [...SOURCES, ...liveTvboxSources, ...customSources],
+    () => [OPEN_MOVIES_SOURCE, ...SOURCES, ...liveTvboxSources, ...customSources],
     [liveTvboxSources, customSources],
   )
   const source = useMemo(() => {
