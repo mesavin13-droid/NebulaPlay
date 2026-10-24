@@ -193,8 +193,7 @@ export function deriveTrend(t: Title): RatingPoint[] {
 export const SOURCES: VideoSource[] = []
 
 // 首次进入默认选择置顶资源组中的速播；探活确认失效后仍由 App 自动轮换。
-export const DEFAULT_SOURCE_ID =
-  "tvbox-https://www.subozy.com/api.php/provide/vod"
+export const DEFAULT_SOURCE_ID = "open-movies-cc-by"
 
 // ============================================================================
 // 自定义片源 —— 用户在界面里手动配置的片源地址(持久化在 customSources.ts)。
