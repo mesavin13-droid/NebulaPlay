@@ -329,7 +329,7 @@ export function Player({
               {t.sub && <span className="text-[#e8b23a]">: {t.sub}</span>}
             </h1>
             <span className="rounded bg-[#14161f] px-2 py-1 text-sm text-[#c9ccd6]">
-              {isSeries ? `Серия ${ep} · ${t.latest}` : ruLabel(t.latest)}
+              {isSeries ? `Серия ${ep} · ${ruLabel(t.latest)}` : ruLabel(t.latest)}
             </span>
             <span className="flex items-center gap-1 text-sm font-bold text-[#e8b23a]">
               <IconStar className="h-3.5 w-3.5" /> {ratingLabel(t)}
