@@ -46,7 +46,6 @@ const FOOTER_COLUMNS = [
       { label: "Инструкция", href: `${REPOSITORY_URL}#readme` },
       { label: "Права на контент", href: `${REPOSITORY_URL}#readme` },
       { label: "Сообщить о проблеме", href: `${REPOSITORY_URL}/issues` },
-      { label: "Внешний благотворительный ресурс", href: BABY_HOME_URL },
     ],
   },
 ]
