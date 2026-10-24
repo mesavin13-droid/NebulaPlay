@@ -526,7 +526,7 @@ function LocalTab({
                 </div>
               </div>
               <p className="mt-1.5 truncate text-sm text-white">{p.name}</p>
-              <p className="text-[11px] text-[#9aa0b0]">{p.latest}</p>
+              <p className="text-[11px] text-[#9aa0b0]">{ruLabel(p.latest)}</p>
             </button>
           ))}
         </div>
@@ -581,7 +581,7 @@ function LocalTab({
             </div>
             <p className="mt-1.5 truncate text-sm text-white">{h.name}</p>
             <p className="text-[11px] text-[#9aa0b0]">
-              {h.ep} · {h.progress}%
+              {ruLabel(h.ep)} · {h.progress}%
             </p>
           </button>
         ))}
