@@ -6,7 +6,7 @@ import {
   type VideoSource,
 } from "../data"
 import { EpisodePager } from "../EpisodePager"
-import { ruLabel } from "../localization"
+import { ruLabel, ruMessage } from "../localization"
 import { episodePageFor, getEpisodePagination } from "../episodePagination"
 import { getHistoryRecord, historyEpisode, recordHistory } from "../history"
 import { PageLoading } from "../PageLoading"
@@ -189,7 +189,7 @@ export function Player({
   if (!t) {
     return (
       <p className="mx-auto max-w-[1440px] px-8 py-24 text-center text-[#9aa0b0]">
-        {detailError ?? "Фильм не найден."}
+        {detailError ? ruMessage(detailError) : "Фильм не найден."}
       </p>
     )
   }
@@ -229,7 +229,7 @@ export function Player({
             <div className="grid aspect-video place-items-center rounded-xl bg-black px-6 text-center ring-1 ring-[#e0142c]/25">
               <div>
                 <p className="font-medium text-white">Не удалось загрузить видеопоток</p>
-                <p className="mt-2 text-sm text-[#9aa0b0]">{playError}</p>
+                <p className="mt-2 text-sm text-[#9aa0b0]">{ruMessage(playError)}</p>
                 <button
                   onClick={() => {
                     prefetchedSources.current.delete(episodeKey)
