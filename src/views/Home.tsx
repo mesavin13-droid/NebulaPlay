@@ -63,7 +63,7 @@ export function Home({
       <div className="mx-auto max-w-[1440px] px-4 pb-16 lg:px-8">
         <section
           className="grid min-w-0 gap-4 pt-5 lg:grid-cols-[minmax(0,1fr)_320px]"
-          aria-label="首页内容加载中"
+          aria-label="Загружаем главную страницу"
         >
           <div className="min-w-0 aspect-[16/7] animate-pulse rounded-lg bg-[#10121a] ring-1 ring-white/6">
             <div className="flex h-full flex-col justify-end gap-3 p-6">
@@ -108,19 +108,19 @@ export function Home({
 
   const rows = [
     {
-      title: "今日热门电影",
+      title: "Популярные фильмы сегодня",
       cat: "电影",
       items: titles.slice(1, 9),
       ranked: false,
     },
     {
-      title: "人气推荐",
+      title: "Рекомендуем посмотреть",
       cat: "推荐",
       items: [...titles].slice(6).concat(titles.slice(0, 2)),
       ranked: false,
     },
     {
-      title: "高分榜单",
+      title: "Фильмы с высокими оценками",
       cat: "推荐",
       items: [...titles].sort((a, b) => b.rating - a.rating).slice(0, 8),
       ranked: true,
@@ -144,7 +144,7 @@ export function Home({
           <div className="rounded-xl border border-white/6 bg-[#0e1018] p-4">
             <div className="mb-3 flex items-center gap-4 border-b border-white/6 pb-2">
               <h3 className="flex items-center gap-2 font-serif text-base font-bold text-white">
-                <span className="text-[#e0142c]">🔥</span> 星幕热播榜
+                <span className="text-[#e0142c]">🔥</span> CINEMA · Популярное
               </h3>
               <div className="ml-auto flex gap-2 text-xs">
                 {(["热播", "好评", "新番"] as const).map((tab) => (
@@ -193,7 +193,7 @@ export function Home({
               完全免费 · 公益驱动
             </h3>
             <p className="text-xs leading-relaxed text-[#9aa0b0]">
-              星幕由志愿者社区维护,无广告、无会员、无付费墙。所有内容仅接入原创、授权或公有领域片源,人人皆可自由观看。
+              CINEMA подключает только собственные материалы, контент с разрешением правообладателя или произведения из общественного достояния.
             </p>
           </div>
         </aside>
@@ -230,7 +230,7 @@ function ContinueWatching({
           <span className="h-5 w-1 rounded-full bg-[#e0142c]" />
           继续观看
           <span className="text-sm font-normal text-[#9aa0b0]">
-            本地保存 · 上次看到这里
+            Сохранено на устройстве · последнее место просмотра
           </span>
         </h2>
         <button
@@ -271,7 +271,7 @@ function ContinueWatching({
                   event.stopPropagation()
                   removeHistory(item.sourceId, item.titleId)
                 }}
-                aria-label="删除记录"
+                aria-label="Удалить запись"
                 className="absolute right-1 top-1 grid h-6 w-6 place-items-center rounded-full bg-black/60 text-white opacity-0 transition hover:bg-[#e0142c] group-hover:opacity-100"
               >
                 ×
@@ -355,7 +355,7 @@ function HeroBanner({
               onClick={() => onOpen(hero.id)}
               className="flex items-center gap-2 rounded-lg bg-[#e0142c] px-6 py-2.5 font-bold text-white shadow-lg shadow-[#e0142c]/30 transition hover:bg-[#ff3b52]"
             >
-              <IconPlay className="h-5 w-5" /> 立即播放
+              <IconPlay className="h-5 w-5" /> Смотреть
             </button>
             <button
               onClick={() =>
@@ -378,7 +378,7 @@ function HeroBanner({
               ) : (
                 <IconPlus className="h-5 w-5" />
               )}
-              {inList ? "已在片单" : "加入片单"}
+              {inList ? "Уже в моём списке" : "В мой список"}
             </button>
           </div>
         </div>
