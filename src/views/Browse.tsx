@@ -423,7 +423,7 @@ export function Browse({
               </div>
             ) : list.length === 0 ? (
               <p className="py-16 text-center text-[#5a5f70]">
-                В категории «{side}» пока нет фильмов. Попробуйте другой источник или ослабьте фильтры.
+                В категории «{ruLabel(side)}» пока нет фильмов. Попробуйте другой источник или ослабьте фильтры.
               </p>
             ) : (
               <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
