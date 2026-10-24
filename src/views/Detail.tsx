@@ -194,7 +194,7 @@ export function Detail({
           </Panel>
 
           {isSeries ? (
-            <Panel title="Список серий" accent={`共 ${total} 集`}>
+            <Panel title="Список серий" accent={`Всего серий: ${total}`}>
               <EpisodePager
                 total={total}
                 page={episodePagination.page}
