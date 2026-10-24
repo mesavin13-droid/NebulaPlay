@@ -184,7 +184,7 @@ export function Search({
           type="submit"
           className="shrink-0 rounded-xl bg-[#e0142c] px-4 py-1.5 text-sm font-bold text-white transition hover:bg-[#ff3b52]"
         >
-          搜索
+          Найти
         </button>
       </form>
 
@@ -194,13 +194,13 @@ export function Search({
             <section>
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="font-serif text-base font-bold text-white">
-                  搜索历史
+                  История поиска
                 </h2>
                 <button
                   onClick={clearRecent}
                   className="text-xs text-[#5a5f70] transition hover:text-[#ff3b52]"
                 >
-                  清空
+                  Очистить
                 </button>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -275,7 +275,7 @@ export function Search({
       {!active && (
         <section className="mt-10">
           <h2 className="mb-3 font-serif text-base font-bold text-white">
-            高分推荐
+            Рекомендуем фильмы с высокими оценками
           </h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
             {[...titles]
