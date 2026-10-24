@@ -128,9 +128,9 @@ export function Detail({
                 <span>·</span>
                 <span>{t.region}</span>
                 <span>·</span>
-                <span>{t.genres.join(" / ")}</span>
+                <span>{t.genres.map(ruLabel).join(" / ")}</span>
                 <span>·</span>
-                <span className="text-[#ff3b52]">{t.latest}</span>
+                <span className="text-[#ff3b52]">{ruLabel(t.latest)}</span>
               </div>
 
               <div className="mt-5 flex flex-wrap items-center gap-3">
