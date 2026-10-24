@@ -205,7 +205,7 @@ export function Home({
       {rows.map((row) => (
         <Row
           key={row.title}
-          title={row.title}
+          title={ruLabel(row.title)}
           items={row.items}
           onOpen={onOpen}
           ranked={row.ranked}
