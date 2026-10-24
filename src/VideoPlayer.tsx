@@ -224,17 +224,17 @@ export function VideoPlayer({
           const reason = error instanceof Error ? error.message : ""
           showOsd(
             reason.includes("GPU 无法流畅")
-              ? "设备性能不足，已自动关闭画质增强"
-              : "画质增强已关闭:视频源不支持 WebGPU 处理",
+              ? "Производительности устройства недостаточно. Улучшение изображения отключено."
+              : "Улучшение изображения отключено: источник не поддерживает обработку WebGPU.",
           )
         }
         setEnhance("on")
-        showOsd("画质增强已开启")
+        showOsd("Улучшение изображения включено")
       })
       .catch(() => {
         if (!alive) return
         setEnhance("off")
-        showOsd("当前浏览器不支持 WebGPU 画质增强")
+        showOsd("Этот браузер не поддерживает улучшение изображения WebGPU")
       })
     return () => {
       alive = false
@@ -248,7 +248,7 @@ export function VideoPlayer({
   const toggleEnhance = () => {
     if (enhance === "off") {
       if (!isAnime4KSupported()) {
-        showOsd("当前浏览器不支持 WebGPU 画质增强")
+        showOsd("Этот браузер не поддерживает улучшение изображения WebGPU")
         return
       }
       setEnhance("starting")
@@ -256,7 +256,7 @@ export function VideoPlayer({
       enhanceHandle.current?.stop()
       enhanceHandle.current = null
       setEnhance("off")
-      showOsd("画质增强已关闭")
+      showOsd("Улучшение изображения отключено")
     }
   }
 
@@ -304,8 +304,8 @@ export function VideoPlayer({
         setCurrent(start.seconds)
         showOsd(
           start.reason === 'intro'
-            ? `已跳过片头 ${fmt(start.seconds)}`
-            : `已续播至 ${fmt(start.seconds)}`,
+            ? `Пропущено вступление: ${fmt(start.seconds)}`
+            : `Продолжение с ${fmt(start.seconds)}`,
         )
       } catch {
         initialResumeApplied.current = false
@@ -366,7 +366,7 @@ export function VideoPlayer({
       const v = videoRef.current
       if (!v || !isFinite(v.duration)) return
       v.currentTime = Math.min(Math.max(0, v.currentTime + delta), v.duration)
-      showOsd(delta > 0 ? `快进 +${delta}s` : `快退 ${delta}s`)
+      showOsd(delta > 0 ? `Перемотка вперёд +${delta} с` : `Перемотка назад ${delta} с`)
     },
     [showOsd],
   )
@@ -388,7 +388,7 @@ export function VideoPlayer({
         case 'k':
           e.preventDefault()
           toggle()
-          showOsd(v.paused ? '播放' : '暂停')
+          showOsd(v.paused ? 'Воспроизведение' : 'Пауза')
           break
         case 'ArrowLeft':
           e.preventDefault()
@@ -410,12 +410,12 @@ export function VideoPlayer({
           const next = Math.min(1, Math.max(0, v.volume + (e.key === 'ArrowUp' ? 0.1 : -0.1)))
           setVolume(next)
           setMuted(next === 0)
-          showOsd(`音量 ${Math.round(next * 100)}%`)
+          showOsd(`Громкость ${Math.round(next * 100)}%`)
           break
         }
         case 'm':
           setMuted((m) => {
-            showOsd(m ? '取消静音' : '静音')
+            showOsd(m ? 'Включить звук' : 'Отключить звук')
             return !m
           })
           break
@@ -427,13 +427,13 @@ export function VideoPlayer({
           const i = SPEEDS.findIndex((s) => s === rate)
           const next = SPEEDS[Math.min(SPEEDS.length - 1, Math.max(0, i + (e.key === ']' ? 1 : -1)))]
           setRate(next)
-          showOsd(`倍速 ${next}x`)
+          showOsd(`Скорость ${next}x`)
           break
         }
         default:
           if (/^[0-9]$/.test(e.key) && isFinite(v.duration)) {
             v.currentTime = (Number(e.key) / 10) * v.duration
-            showOsd(`跳转 ${e.key}0%`)
+            showOsd(`Переход к ${e.key}0%`)
           }
       }
     }
@@ -567,7 +567,7 @@ export function VideoPlayer({
         await document.exitPictureInPicture()
       else await v.requestPictureInPicture()
     } catch {
-      showOsd("画中画不可用")
+      showOsd("Режим «картинка в картинке» недоступен")
     }
   }
 
@@ -794,7 +794,7 @@ export function VideoPlayer({
   // 展示用码率档:playlist 没给高度时,用起播后读到的真实分辨率兜底。
   const displayLevels = levels.map((l) => ({
     i: l.i,
-    label: l.label || qualityLabel(videoH) || '默认',
+    label: l.label || qualityLabel(videoH) || 'По умолчанию',
   }))
   const autoDisplay = autoLevel >= 0 ? (displayLevels.find((l) => l.i === autoLevel)?.label ?? '') : ''
 
@@ -831,7 +831,7 @@ export function VideoPlayer({
       )}
       {enhance === "starting" && (
         <span className="pointer-events-none absolute right-3 top-3 rounded-md bg-black/75 px-3 py-1.5 text-xs font-medium text-[#e8b23a] backdrop-blur">
-          画质增强启动中…
+          Запускаем улучшение изображения…
         </span>
       )}
 
@@ -871,7 +871,7 @@ export function VideoPlayer({
         <div className="absolute inset-0 grid place-items-center bg-black/70 text-center text-sm text-[#9aa0b0]">
           <div>
             <IconFilm className="mx-auto mb-2 h-8 w-8" />
-            视频加载失败,请稍后重试或切换清晰度。
+            Не удалось загрузить видео. Попробуйте ещё раз или выберите другое качество.
           </div>
         </div>
       ) : waiting && showWaitingIndicator ? (
@@ -909,7 +909,7 @@ export function VideoPlayer({
             onClick={() => {
               const v = videoRef.current
               if (v) v.currentTime = skipIntroSeconds
-              showOsd(`已跳过片头 ${fmt(skipIntroSeconds)}`)
+              showOsd(`Пропущено вступление: ${fmt(skipIntroSeconds)}`)
             }}
             className="absolute bottom-[72px] right-4 rounded-md border border-white/25 bg-black/60 px-3 py-1.5 text-xs font-medium text-white backdrop-blur transition hover:bg-black/85"
           >
@@ -969,12 +969,12 @@ export function VideoPlayer({
         </div>
 
         <div className="flex items-center gap-3 text-white sm:gap-4">
-          <button onClick={toggle} aria-label={playing ? '暂停' : '播放'}>
+          <button onClick={toggle} aria-label={playing ? 'Пауза' : 'Воспроизведение'}>
             {playing ? <IconPause className="h-5 w-5" /> : <IconPlay className="h-5 w-5" />}
           </button>
 
           {hasNextEpisode && (
-            <button onClick={() => onNextEpisode?.()} aria-label="下一集" title="下一集">
+            <button onClick={() => onNextEpisode?.()} aria-label="Следующая серия" title="Следующая серия">
               <SkipForward className="h-5 w-5" />
             </button>
           )}
@@ -986,9 +986,9 @@ export function VideoPlayer({
               className={`shrink-0 rounded px-2 py-1 text-xs font-medium transition ${
                 dmOn ? 'bg-[#e0142c] text-white' : 'bg-white/10 text-[#9aa0b0] hover:text-white'
               }`}
-              title={dmOn ? '关闭弹幕' : '开启弹幕'}
+              title={dmOn ? 'Выключить комментарии' : 'Включить комментарии'}
             >
-              弹幕{dmOn ? '开' : '关'}
+              Комментарии {dmOn ? "вкл." : "выкл."}
             </button>
             <input
               value={dmText}
@@ -999,7 +999,7 @@ export function VideoPlayer({
                 if (e.key === 'Enter') sendDanmaku()
                 e.stopPropagation()
               }}
-              placeholder="发一条友善的弹幕…"
+              placeholder="Оставьте комментарий поверх видео…"
               maxLength={40}
               className="min-w-0 flex-1 rounded-full border border-white/15 bg-white/8 px-3 py-1 text-xs text-white placeholder:text-[#8a8f9e] outline-none focus:border-[#e0142c]/60"
             />
@@ -1028,8 +1028,8 @@ export function VideoPlayer({
             )}
             <button
               onClick={toggleEnhance}
-              aria-label="画质增强"
-              title={enhance === "on" ? "关闭画质增强 (Anime4K)" : "开启画质增强 (Anime4K)"}
+              aria-label="Улучшение изображения"
+              title={enhance === "on" ? "Отключить улучшение изображения (Anime4K)" : "Включить улучшение изображения (Anime4K)"}
               className={`transition ${
                 enhance === "on"
                   ? "text-[#e8b23a]"
@@ -1040,7 +1040,7 @@ export function VideoPlayer({
             </button>
             {/* 音量:桌面 hover 展开滑条;移动端交给系统按键 */}
             <div className="group/vol hidden items-center gap-2 sm:flex">
-              <button onClick={() => setMuted((m) => !m)} aria-label="静音">
+              <button onClick={() => setMuted((m) => !m)} aria-label="Отключить звук">
                 <IconVolume muted={muted || volume === 0} className="h-5 w-5" />
               </button>
               <input
@@ -1054,7 +1054,7 @@ export function VideoPlayer({
                   setMuted(Number(e.target.value) === 0)
                 }}
                 className="h-1 w-0 cursor-pointer opacity-0 accent-[#e0142c] transition-all duration-200 group-hover/vol:w-16 group-hover/vol:opacity-100"
-                aria-label="音量"
+                aria-label="Громкость"
               />
             </div>
             <PlayerSettingsMenu
@@ -1062,19 +1062,19 @@ export function VideoPlayer({
               onChange={(patch) => onPreferencesChange?.(patch)}
             />
             {pipSupported && (
-              <button onClick={togglePip} aria-label="画中画" title="画中画" className="hidden sm:block">
+              <button onClick={togglePip} aria-label="Картинка в картинке" title="Картинка в картинке" className="hidden sm:block">
                 <PictureInPicture2 className="h-5 w-5" />
               </button>
             )}
             <button
               onClick={() => setWebFull((v) => !v)}
-              aria-label="网页全屏"
-              title="网页全屏"
+              aria-label="Полноэкранный режим страницы"
+              title="Полноэкранный режим страницы"
               className="hidden sm:block"
             >
               <Expand className={`h-5 w-5 ${webFull ? 'text-[#e0142c]' : ''}`} />
             </button>
-            <button onClick={toggleFs} aria-label="全屏">
+            <button onClick={toggleFs} aria-label="Полный экран">
               <IconExpand className={`h-5 w-5 ${fs || iosNativeFs ? 'text-[#e0142c]' : ''}`} />
             </button>
           </div>
@@ -1095,7 +1095,7 @@ function QualityMenu({
 }) {
   const [open, setOpen] = useState(false)
   if (list.length <= 1) {
-    return <span className="text-xs text-[#c9ccd6]">{list[0]?.label ?? '标清'}</span>
+    return <span className="text-xs text-[#c9ccd6]">{list[0]?.label ?? 'Стандартное'}</span>
   }
   return (
     <div className="relative">
@@ -1103,7 +1103,7 @@ function QualityMenu({
         onClick={() => setOpen((o) => !o)}
         className="text-xs font-medium text-[#c9ccd6] hover:text-white"
       >
-        {list[active]?.label ?? '清晰度'}
+        {list[active]?.label ?? 'Качество'}
       </button>
       {open && (
         <div className="absolute bottom-full right-0 mb-2 overflow-hidden rounded-lg border border-white/10 bg-[#0e1018] py-1 shadow-xl">
@@ -1142,8 +1142,8 @@ function LevelsMenu({
   const [open, setOpen] = useState(false)
   const current =
     active < 0
-      ? `自动${autoLabel ? ` · ${autoLabel}` : ''}`
-      : (list.find((l) => l.i === active)?.label ?? '自动')
+      ? `Авто${autoLabel ? ` · ${autoLabel}` : ''}`
+      : (list.find((l) => l.i === active)?.label ?? 'Авто')
   return (
     <div className="relative">
       <button
@@ -1155,7 +1155,7 @@ function LevelsMenu({
       {open && (
         <div className="absolute bottom-full right-0 mb-2 overflow-hidden rounded-lg border border-white/10 bg-[#0e1018] py-1 shadow-xl">
           {/* 高码率在上,符合选清晰度的直觉顺序 */}
-          {[{ i: -1, label: '自动' }, ...[...list].reverse()].map((l) => (
+          {[{ i: -1, label: 'Авто' }, ...[...list].reverse()].map((l) => (
             <button
               key={l.i}
               onClick={() => {
@@ -1217,8 +1217,8 @@ function PlayerSettingsMenu({
     <div className="relative">
       <button
         onClick={() => setOpen((o) => !o)}
-        aria-label="播放设置"
-        title="播放设置"
+        aria-label="Настройки воспроизведения"
+        title="Настройки воспроизведения"
         className="text-[#c9ccd6] transition hover:text-white"
       >
         <Settings className="h-5 w-5" />
@@ -1226,35 +1226,35 @@ function PlayerSettingsMenu({
       {open && (
         <div className="absolute bottom-full right-0 mb-2 w-56 rounded-lg border border-white/10 bg-[#0e1018] py-1 shadow-xl">
           <MenuSwitch
-            label="自动下一集"
+            label="Автоматически включать следующую серию"
             checked={value.autoNext}
             onChange={(autoNext) => onChange({ autoNext })}
           />
           <MenuSwitch
-            label="循环播放"
+            label="Повторять воспроизведение"
             checked={value.loop}
             onChange={(loop) => onChange({ loop })}
           />
           <MenuSwitch
-            label="跳过片头"
+            label="Пропускать вступление"
             checked={value.skipIntro}
             onChange={(skipIntro) => onChange({ skipIntro })}
           />
           {value.skipIntro && (
             <MenuSeconds
-              label="片头时长"
+              label="Длительность вступления"
               value={value.introSeconds}
               onChange={(introSeconds) => onChange({ introSeconds })}
             />
           )}
           <MenuSwitch
-            label="跳过片尾"
+            label="Пропускать концовку"
             checked={value.skipOutro}
             onChange={(skipOutro) => onChange({ skipOutro })}
           />
           {value.skipOutro && (
             <MenuSeconds
-              label="片尾时长"
+              label="Длительность концовки"
               value={value.outroSeconds}
               onChange={(outroSeconds) => onChange({ outroSeconds })}
             />
