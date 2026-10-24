@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { Search as SearchIcon, TrendingUp, X } from "lucide-react"
 import { ratingLabel, type Title, type VideoSource } from "../data"
-import { ruLabel } from "../localization"
+import { ruLabel, ruMessage } from "../localization"
 import { PageLoading } from "../PageLoading"
 import { IconStar, Img, PosterCard } from "../ui"
 
@@ -241,7 +241,7 @@ export function Search({
           </h2>
           <p className="mt-2 max-w-sm text-sm text-[#9aa0b0]">
             {searchErr
-              ? `Ошибка поиска во внешнем источнике: ${searchErr}`
+              ? `Ошибка поиска во внешнем источнике: ${ruMessage(searchErr)}`
               : "Попробуйте другой запрос или выберите популярную тему ниже."}
           </p>
           {hot.length > 0 && (
