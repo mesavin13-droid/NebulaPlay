@@ -4,7 +4,6 @@ import { ratingLabel, type Title, type VideoSource } from "../data"
 import { ruLabel } from "../localization"
 import { PageLoading } from "../PageLoading"
 import { IconStar, Img, PosterCard } from "../ui"
-import { ruLabel } from "../localization"
 
 const RECENT_KEY = "nebulaplay:searches:v1"
 
