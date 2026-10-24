@@ -20,8 +20,8 @@ export function SourceManager({ onClose, onSaved }: { onClose: () => void; onSav
       <div className="mt-[6vh] w-full max-w-2xl overflow-hidden rounded-2xl border border-white/10 bg-[#0e1018] shadow-2xl shadow-black/60">
         <div className="flex items-center justify-between border-b border-white/8 px-5 py-4">
           <div>
-            <h2 className="font-serif text-lg font-bold text-white">自定义片源</h2>
-            <p className="text-xs text-[#5a5f70]">手动配置片源地址</p>
+            <h2 className="font-serif text-lg font-bold text-white">Мои источники</h2>
+            <p className="text-xs text-[#5a5f70]">Настройте адрес источника вручную</p>
           </div>
           <button
             onClick={onClose}
@@ -72,7 +72,7 @@ function SourceList({
     <div className="p-5">
       {configs.length === 0 ? (
         <p className="rounded-xl border border-dashed border-white/10 py-10 text-center text-sm text-[#5a5f70]">
-          还没有自定义片源。点击下方「新增片源」，粘贴一个合法的直链或片库地址即可。
+          Пользовательских источников пока нет. Нажмите «Добавить источник» и вставьте разрешённую ссылку на каталог или видео.
         </p>
       ) : (
         <ul className="space-y-2">
@@ -94,12 +94,12 @@ function SourceList({
                   )}
                   {c.kind === 'cms-api' && (
                     <span className="shrink-0 rounded bg-[#5c8dff]/15 px-1.5 py-0.5 text-[10px] font-bold text-[#7aa2ff]">
-                      兼容 API
+                      Совместимый API
                     </span>
                   )}
                 </p>
                 <p className="truncate text-xs text-[#5a5f70]">
-                  {c.catalogUrl || c.fallbackPlayUrl || c.tagline || '内联片库'}
+                  {c.catalogUrl || c.fallbackPlayUrl || c.tagline || 'Встроенный каталог'}
                 </p>
               </div>
               <button
@@ -148,7 +148,7 @@ function TvboxImport({
   const [error, setError] = useState<string | null>(null)
 
   const pull = async () => {
-    if (!url.trim()) return setError('请填写订阅地址。')
+    if (!url.trim()) return setError('Введите адрес подписки.')
     setBusy(true)
     setError(null)
     setLines(null)
@@ -159,7 +159,7 @@ function TvboxImport({
       const existing = new Set(configs.map((c) => c.catalogUrl))
       setChecked(new Set(list.filter((l) => !existing.has(l.url)).map((l) => l.url)))
     } catch (e) {
-      setError(e instanceof Error ? e.message : '订阅拉取失败')
+      setError(e instanceof Error ? e.message : 'Не удалось загрузить подписку')
     } finally {
       setBusy(false)
     }
@@ -181,8 +181,8 @@ function TvboxImport({
       if (!checked.has(l.url) || existing.has(l.url)) continue
       const id = saveCustomSource({
         kind: 'tvbox',
-        name: l.name || 'TVBox 线路',
-        tagline: 'TVBox 多线路订阅',
+        name: l.name || 'Линия TVBox',
+        tagline: 'Подписка на несколько линий TVBox',
         catalogUrl: l.url,
       })
       first ??= id
@@ -196,8 +196,8 @@ function TvboxImport({
     <div className="border-t border-white/8 p-5">
       <button onClick={() => setOpen((o) => !o)} className="flex w-full items-center gap-2 text-left">
         <span className={`text-[#9aa0b0] transition ${open ? 'rotate-90' : ''}`}>▸</span>
-        <span className="text-sm font-medium text-[#c9ccd6]">导入 TVBox 多线路订阅</span>
-        <span className="text-[11px] text-[#5a5f70]">肥猫 / 饭太硬等多仓线路,一键批量接入</span>
+        <span className="text-sm font-medium text-[#c9ccd6]">Импорт подписки TVBox</span>
+        <span className="text-[11px] text-[#5a5f70]">Импорт нескольких источников за один раз</span>
       </button>
 
       {open && (
@@ -214,7 +214,7 @@ function TvboxImport({
               disabled={busy}
               className="shrink-0 rounded-lg bg-white/8 px-4 py-2 text-xs font-bold text-white transition hover:bg-white/15 disabled:opacity-50"
             >
-              {busy ? '拉取中…' : '拉取线路'}
+              {busy ? 'Загрузка…' : 'Получить список'}
             </button>
           </div>
 
@@ -246,10 +246,10 @@ function TvboxImport({
                 disabled={selectedCount === 0}
                 className="w-full rounded-lg bg-[#e0142c] py-2.5 text-sm font-bold text-white transition hover:bg-[#ff3b52] disabled:opacity-40"
               >
-                导入选中的 {selectedCount} 条线路
+                Импортировать выбранные источники ({selectedCount})
               </button>
               <p className="text-[11px] leading-relaxed text-[#5a5f70]">
-                说明:线路里只有 CMS 风格接口可在浏览器使用,spider 私有协议源会被自动跳过;请求经本地开发代理转发。
+                Важно: в браузере поддерживаются только интерфейсы CMS. Источники с закрытым протоколом spider пропускаются. Запросы проходят через настроенный прокси.
 
               </p>
             </>
@@ -280,16 +280,16 @@ function SourceForm({
 
   const submit = () => {
     setError(null)
-    if (!name.trim()) return setError('请填写片源名称。')
+    if (!name.trim()) return setError('Укажите название источника.')
 
     const effectiveKind = initial?.kind === 'tvbox' ? 'tvbox' : kind === 'cms-api' ? 'cms-api' : undefined
     if (effectiveKind === 'cms-api') {
-      if (!catalogUrl.trim()) return setError('请填写完整 CMS API 端点。')
+      if (!catalogUrl.trim()) return setError('Укажите полный адрес CMS API.')
       try {
         new URL(catalogUrl.trim())
         if (detailUrl.trim()) new URL(detailUrl.trim())
       } catch {
-        return setError('API 地址格式有误。')
+        return setError('Неверный формат адреса API.')
       }
       onSubmit({
         id: initial?.id,
@@ -307,20 +307,20 @@ function SourceForm({
       try {
         const parsed = JSON.parse(json)
         titles = normalizeTitles(Array.isArray(parsed) ? parsed : (parsed?.list ?? parsed?.data ?? []), fallbackPlayUrl.trim() || undefined)
-        if (!titles.length) return setError('内联 JSON 解析后没有任何影片。')
+        if (!titles.length) return setError('В JSON не найдено ни одного фильма.')
       } catch {
-        return setError('内联 JSON 格式有误，请检查。')
+        return setError('Проверьте формат JSON.')
       }
     }
 
     if (!catalogUrl.trim() && !fallbackPlayUrl.trim() && !titles) {
-      return setError('请至少填写「片库地址」「直链播放地址」或「内联片库 JSON」其中之一。')
+      return setError('Укажите адрес каталога, прямую ссылку на видео или JSON с фильмами.')
     }
 
     // 只填直链、没有片库时，自动合成一部单片，播放器即可直接播放。
     if (!catalogUrl.trim() && !titles && fallbackPlayUrl.trim()) {
       titles = normalizeTitles(
-        [{ id: 'single', name: name.trim(), playUrl: fallbackPlayUrl.trim(), synopsis: tagline.trim() || '手动添加的单片。' }],
+        [{ id: 'single', name: name.trim(), playUrl: fallbackPlayUrl.trim(), synopsis: tagline.trim() || 'Фильм добавлен вручную.' }],
         fallbackPlayUrl.trim(),
       )
     }
@@ -345,33 +345,33 @@ function SourceForm({
             onChange={(event) => setKind(event.target.value as 'json' | 'cms-api')}
             className="w-full rounded-lg border border-white/8 bg-[#14161f] px-3 py-2 text-sm text-white outline-none focus:border-[#e0142c]/50"
           >
-            <option value="json">JSON 片库 / 直链</option>
-            <option value="cms-api">兼容 CMS API 请求</option>
+            <option value="json">Каталог JSON / прямая ссылка</option>
+            <option value="cms-api">Подключение к CMS API</option>
           </select>
         </Field>
       )}
 
-      <Field label="片源名称" required>
+      <Field label="Название источника" required>
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="例如：我的片库"
+          placeholder="Например: Мой каталог"
           className="w-full rounded-lg border border-white/8 bg-[#14161f] px-3 py-2 text-sm text-white placeholder:text-[#5a5f70] outline-none focus:border-[#e0142c]/50"
         />
       </Field>
 
-      <Field label="一句话说明">
+      <Field label="Краткое описание">
         <input
           value={tagline}
           onChange={(e) => setTagline(e.target.value)}
-          placeholder="选填，显示在片源列表里"
+          placeholder="Необязательно: будет показано в списке источников"
           className="w-full rounded-lg border border-white/8 bg-[#14161f] px-3 py-2 text-sm text-white placeholder:text-[#5a5f70] outline-none focus:border-[#e0142c]/50"
         />
       </Field>
 
       <Field
-        label={kind === 'cms-api' ? '完整 CMS API 端点' : '片库 JSON 地址'}
-        hint={kind === 'cms-api' ? '例如 https://example.com/api.php/provide/vod/' : '返回影片数组的接口'}
+        label={kind === 'cms-api' ? 'Полный адрес CMS API' : 'Адрес каталога JSON'}
+        hint={kind === 'cms-api' ? 'Например: https://example.com/api.php/provide/vod/' : 'Адрес API, возвращающего список фильмов'}
       >
         <input
           value={catalogUrl}
@@ -382,7 +382,7 @@ function SourceForm({
       </Field>
 
       {kind === 'cms-api' && (
-        <Field label="HTML 详情站根地址" hint="选填，对应 customDetail / useDetail">
+        <Field label="Базовый адрес сайта с описаниями HTML" hint="Необязательно. Для дополнительной загрузки описаний">
           <input
             value={detailUrl}
             onChange={(event) => setDetailUrl(event.target.value)}
@@ -392,7 +392,7 @@ function SourceForm({
         </Field>
       )}
 
-      {kind !== 'cms-api' && <Field label="直链播放地址" hint="单个 mp4 / webm / m3u8 直链，或作为片库缺失时的兜底">
+      {kind !== 'cms-api' && <Field label="Прямая ссылка на видео" hint="Ссылка на MP4, WebM или M3U8; также используется, если в каталоге нет ссылки">
         <input
           value={fallbackPlayUrl}
           onChange={(e) => setFallbackPlayUrl(e.target.value)}
@@ -401,12 +401,12 @@ function SourceForm({
         />
       </Field>}
 
-      {kind !== 'cms-api' && <Field label="内联片库 JSON（高级）" hint="直接粘贴影片数组，会覆盖片库地址">
+      {kind !== 'cms-api' && <Field label="JSON-каталог (для опытных пользователей)" hint="Вставьте массив фильмов. Он будет использоваться вместо адреса каталога">
         <textarea
           value={json}
           onChange={(e) => setJson(e.target.value)}
           rows={5}
-          placeholder='[{ "name": "示例影片", "playUrl": "https://.../a.mp4", "poster": "https://.../a.jpg" }]'
+          placeholder='[{ "name": "Пример фильма", "playUrl": "https://.../video.mp4", "poster": "https://.../poster.jpg" }]'
           className="w-full resize-y rounded-lg border border-white/8 bg-[#14161f] px-3 py-2 font-mono text-xs text-white placeholder:text-[#5a5f70] outline-none focus:border-[#e0142c]/50"
         />
       </Field>}
@@ -418,7 +418,7 @@ function SourceForm({
       )}
 
       <p className="rounded-lg bg-white/[0.03] px-3 py-2 text-[11px] leading-relaxed text-[#5a5f70]">
-        提示：CMS API 会通过前端代理请求，兼容 customApi、customDetail 与 useDetail。
+        Примечание: запросы к CMS API идут через прокси и поддерживают customApi, customDetail и useDetail.
       </p>
 
       <div className="flex gap-2 pt-1">
