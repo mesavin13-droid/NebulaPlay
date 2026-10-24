@@ -36,7 +36,7 @@ const FOOTER_COLUMNS = [
     links: [
       { label: "Репозиторий GitHub", href: REPOSITORY_URL },
       { label: "Исходный код CINEMA", href: SITE_URL },
-      { label: "MIT License", href: `${REPOSITORY_URL}/blob/dev/LICENSE` },
+      { label: "Лицензия MIT", href: `${REPOSITORY_URL}/blob/dev/LICENSE` },
       { label: "Как помочь проекту", href: `${REPOSITORY_URL}#readme` },
     ],
   },
