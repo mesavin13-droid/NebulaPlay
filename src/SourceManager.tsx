@@ -221,7 +221,7 @@ function TvboxImport({
 
           {error && (
             <p className="rounded-lg border border-[#e0142c]/30 bg-[#e0142c]/10 px-3 py-2 text-xs text-[#ff8a9a]">
-              {error}
+              {ruMessage(error)}
             </p>
           )}
 
@@ -414,7 +414,7 @@ function SourceForm({
 
       {error && (
         <p className="rounded-lg border border-[#e0142c]/30 bg-[#e0142c]/10 px-3 py-2 text-xs text-[#ff8a9a]">
-          {error}
+          {ruMessage(error)}
         </p>
       )}
 
