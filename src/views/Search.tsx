@@ -97,7 +97,7 @@ export function Search({
     return () => clearTimeout(timer)
   }, [query, source, searchKey])
 
-  // 热门搜索:从片库出现频次最高的类型里取几个,作为可点的建议词。
+  // Популярные запросы:从片库出现频次最高的类型里取几个,作为可点的建议词。
   const hot = useMemo(() => {
     const freq = new Map<string, number>()
     for (const t of titles)
@@ -214,7 +214,7 @@ export function Search({
           {hot.length > 0 && (
             <section>
               <h2 className="mb-3 flex items-center gap-1.5 font-serif text-base font-bold text-white">
-                <TrendingUp className="h-4 w-4 text-[#e0142c]" /> 热门搜索
+                <TrendingUp className="h-4 w-4 text-[#e0142c]" /> Популярные запросы
               </h2>
               <div className="flex flex-wrap gap-2">
                 {hot.map((g) => (
