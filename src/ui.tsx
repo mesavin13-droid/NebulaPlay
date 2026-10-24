@@ -106,7 +106,7 @@ export function SectionHeader({
           onClick={onMore}
           className="flex items-center gap-1 text-sm text-[#9aa0b0] transition hover:text-[#ff3b52]"
         >
-          查看全部 <IconChevron className="h-4 w-4" />
+          Смотреть всё <IconChevron className="h-4 w-4" />
         </button>
       )}
     </div>
