@@ -1103,7 +1103,7 @@ function QualityMenu({
         onClick={() => setOpen((o) => !o)}
         className="text-xs font-medium text-[#c9ccd6] hover:text-white"
       >
-        {list[active]?.label ?? 'Качество'}
+        {ruLabel(list[active]?.label ?? 'Качество')}
       </button>
       {open && (
         <div className="absolute bottom-full right-0 mb-2 overflow-hidden rounded-lg border border-white/10 bg-[#0e1018] py-1 shadow-xl">
@@ -1118,7 +1118,7 @@ function QualityMenu({
                 i === active ? 'bg-[#e0142c]/15 text-[#ff3b52]' : 'text-[#c9ccd6] hover:bg-white/5'
               }`}
             >
-              {s.label}
+              {ruLabel(s.label)}
             </button>
           ))}
         </div>
@@ -1143,7 +1143,7 @@ function LevelsMenu({
   const current =
     active < 0
       ? `Авто${autoLabel ? ` · ${autoLabel}` : ''}`
-      : (list.find((l) => l.i === active)?.label ?? 'Авто')
+      : ruLabel(list.find((l) => l.i === active)?.label ?? 'Авто')
   return (
     <div className="relative">
       <button
@@ -1166,7 +1166,7 @@ function LevelsMenu({
                 l.i === active ? 'bg-[#e0142c]/15 text-[#ff3b52]' : 'text-[#c9ccd6] hover:bg-white/5'
               }`}
             >
-              {l.label}
+              {ruLabel(l.label)}
             </button>
           ))}
         </div>
