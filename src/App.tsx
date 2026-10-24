@@ -423,7 +423,7 @@ function Footer({
                         className="text-[#9aa0b0] transition hover:text-[#ff3b52]"
                       >
                         {label}
-                        <span className="sr-only">（在新窗口打开）</span>
+                        <span className="sr-only">(откроется в новой вкладке)</span>
                       </a>
                     </li>
                   ))}
