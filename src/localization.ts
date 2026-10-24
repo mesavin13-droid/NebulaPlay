@@ -164,7 +164,7 @@ export function ruLabel(value: string): string {
   if (/历史/.test(value)) return "Исторические"
   if (/儿童/.test(value)) return "Детские"
   if (/青春/.test(value)) return "Молодёжные"
-  return value
+  return /[\u3400-\u9fff]/.test(value) ? "Без перевода" : value
 }
 
 
