@@ -6,7 +6,7 @@ import {
   type VideoSource,
 } from "../data"
 import { EpisodePager } from "../EpisodePager"
-import { ruLabel } from "../localization"
+import { ruLabel, ruMessage } from "../localization"
 import { getEpisodePagination } from "../episodePagination"
 import { PageLoading } from "../PageLoading"
 import type { Catalog } from "../useCatalog"
@@ -81,7 +81,7 @@ export function Detail({
   if (!t) {
     return (
       <p className="mx-auto max-w-[1440px] px-8 py-24 text-center text-[#9aa0b0]">
-        {detailError ?? "Фильм не найден."}
+        {detailError ? ruMessage(detailError) : "Фильм не найден."}
       </p>
     )
   }
