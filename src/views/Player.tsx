@@ -256,7 +256,7 @@ export function Player({
                   sources={playback.sources}
                   poster={t.backdrop}
                   title={
-                    isSeries ? `${t.name} 第 ${playback.episode} 集` : t.name
+                    isSeries ? `${t.name} · серия ${playback.episode}` : t.name
                   }
                   resumePoint={resumePoint}
                   autoPlay={playback.seamless}
@@ -298,7 +298,7 @@ export function Player({
                       sourceId: source.id,
                       titleId: t.id,
                       name: t.name,
-                      ep: isSeries ? `第 ${playback.episode} 集` : t.latest,
+                      ep: isSeries ? `Серия ${playback.episode}` : t.latest,
                       episode: playback.episode,
                       progress: Math.min(100, Math.round((cur / dur) * 100)),
                       positionSeconds: Math.min(cur, dur),
@@ -325,10 +325,10 @@ export function Player({
             </button>
             <h1 className="font-serif text-2xl font-bold text-white">
               {t.name}
-              {t.sub && <span className="text-[#e8b23a]">：{t.sub}</span>}
+              {t.sub && <span className="text-[#e8b23a]">: {t.sub}</span>}
             </h1>
             <span className="rounded bg-[#14161f] px-2 py-1 text-sm text-[#c9ccd6]">
-              {isSeries ? `第 ${ep} 集 · ${t.latest}` : t.latest}
+              {isSeries ? `Серия ${ep} · ${t.latest}` : ruLabel(t.latest)}
             </span>
             <span className="flex items-center gap-1 text-sm font-bold text-[#e8b23a]">
               <IconStar className="h-3.5 w-3.5" /> {ratingLabel(t)}
