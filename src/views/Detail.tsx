@@ -6,6 +6,7 @@ import {
   type VideoSource,
 } from "../data"
 import { EpisodePager } from "../EpisodePager"
+import { ruLabel } from "../localization"
 import { getEpisodePagination } from "../episodePagination"
 import { PageLoading } from "../PageLoading"
 import type { Catalog } from "../useCatalog"
