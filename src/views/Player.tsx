@@ -6,6 +6,7 @@ import {
   type VideoSource,
 } from "../data"
 import { EpisodePager } from "../EpisodePager"
+import { ruLabel } from "../localization"
 import { episodePageFor, getEpisodePagination } from "../episodePagination"
 import { getHistoryRecord, historyEpisode, recordHistory } from "../history"
 import { PageLoading } from "../PageLoading"
@@ -398,7 +399,7 @@ export function Player({
                   {t.synopsis}
                 </p>
                 <p className="mt-3 text-xs text-[#5a5f70]">
-                  В ролях: {t.cast.join(" / ")} · {t.region} · {t.year}
+                  В ролях: {t.cast.join(" / ")} · {ruLabel(t.region)} · {t.year}
                 </p>
               </div>
             )}
