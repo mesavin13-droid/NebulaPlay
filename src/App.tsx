@@ -33,21 +33,21 @@ const BABY_HOME_URL = "https://baobeihuijia.com/"
 
 const FOOTER_COLUMNS = [
   {
-    title: "开源",
+    title: "Проект",
     links: [
-      { label: "GitHub 仓库", href: REPOSITORY_URL },
+      { label: "Репозиторий GitHub", href: REPOSITORY_URL },
       { label: "Исходный код CINEMA", href: SITE_URL },
       { label: "MIT License", href: `${REPOSITORY_URL}/blob/dev/LICENSE` },
-      { label: "参与贡献", href: `${REPOSITORY_URL}#开发与贡献` },
+      { label: "Как помочь проекту", href: `${REPOSITORY_URL}#readme` },
     ],
   },
   {
-    title: "支持",
+    title: "Информация",
     links: [
-      { label: "使用说明", href: `${REPOSITORY_URL}#readme` },
-      { label: "版权与免责", href: `${REPOSITORY_URL}#免责声明` },
-      { label: "问题反馈", href: `${REPOSITORY_URL}/issues` },
-      { label: "宝贝回家", href: BABY_HOME_URL },
+      { label: "Инструкция", href: `${REPOSITORY_URL}#readme` },
+      { label: "Права на контент", href: `${REPOSITORY_URL}#readme` },
+      { label: "Сообщить о проблеме", href: `${REPOSITORY_URL}/issues` },
+      { label: "Внешний благотворительный ресурс", href: BABY_HOME_URL },
     ],
   },
 ]
@@ -61,7 +61,7 @@ export default function App() {
     new Set(),
   )
 
-  // 内置片源 + 预置 TVBox 源（自动探活过滤失活源）+ 用户自定义源。
+  // 内置片源 + 预置 TVBox 源（自动探活过滤失活源）+ Сделано с户自定义源。
   const customConfigs = useCustomSourceConfigs()
   const customSources = useMemo(
     () => buildCustomSources(customConfigs),
@@ -104,7 +104,7 @@ export default function App() {
       setSourceId("")
   }, [allSources, sourceId])
 
-  // 默认源失败时自动轮换；用户手动选中的源保留错误页便于诊断。
+  // 默认源失败时自动轮换；Сделано с户手动选中的源保留错误页便于诊断。
   useEffect(() => {
     if (!error || catalog?.titles.length || sourceId || !source) return
     setFailedAutoSourceIds((current) => {
@@ -163,7 +163,7 @@ export default function App() {
         ) : loading || !catalog ? (
           <PageLoading
             label={loadingLabel(view)}
-            detail={`正在从「${source.name}」获取完整数据`}
+            detail={`Загружаем каталог из источника «${source.name}»`}
           />
         ) : error && catalog.titles.length === 0 ? (
           <SourceError
@@ -284,17 +284,17 @@ function SourceError({
         ⚠️
       </div>
       <h2 className="mt-4 font-serif text-xl font-bold text-white">
-        片源「{name}」加载失败
+        Не удалось загрузить источник «{name}»
       </h2>
       <p className="mt-2 text-sm text-[#9aa0b0]">{error}</p>
       <p className="mt-1 text-xs text-[#5a5f70]">
-        请检查片源地址与访问权限。跨域请求会使用已配置的前端代理。
+        Проверьте адрес источника и права доступа. Для запросов между доменами используется настроенный прокси.
       </p>
       <button
         onClick={onManage}
         className="mt-5 rounded-lg bg-[#e0142c] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#ff3b52]"
       >
-        检查片源配置
+        Проверить настройки источника
       </button>
     </div>
   )
@@ -317,18 +317,18 @@ function EmptySource({
         🎬
       </div>
       <h2 className="mt-4 font-serif text-xl font-bold text-white">
-        片源「{name}」暂无内容
+        В источнике «{name}» пока нет контента
       </h2>
       <p className="mt-2 text-sm text-[#9aa0b0]">
         {searchable
-          ? "该片源不提供首页目录，请输入关键词搜索。"
-          : "这个片源没有返回任何影片,试试补全它的配置。"}
+          ? "У этого источника нет главного каталога. Введите ключевые слова для поиска."
+          : "Источник не вернул фильмы. Проверьте его настройки."}
       </p>
       <button
         onClick={searchable ? onSearch : onManage}
         className="mt-5 rounded-lg bg-[#e0142c] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#ff3b52]"
       >
-        {searchable ? "开始搜索" : "管理片源"}
+        {searchable ? "Начать поиск" : "Управление источниками"}
       </button>
     </div>
   )
@@ -360,10 +360,10 @@ function Footer({
                 >
                   宝贝回家
                 </h2>
-                <span className="text-xs text-[#e8b23a]">公益寻亲官方入口</span>
+                <span className="text-xs text-[#e8b23a]">Официальный благотворительный ресурс</span>
               </div>
               <p className="mt-1.5 text-sm leading-6 text-[#9aa0b0]">
-                让更多团圆被看见。如需寻亲或提供线索，请前往官方平台；本站不收集、不转载寻亲个人信息。
+                Если вы ищете близкого человека или хотите сообщить информацию, перейдите на официальный сайт. CINEMA не собирает и не публикует персональные данные.
               </p>
             </div>
           </div>
@@ -373,7 +373,7 @@ function Footer({
             rel="noreferrer"
             className="inline-flex shrink-0 items-center gap-2 self-start text-sm font-medium text-white transition hover:text-[#ff3b52] sm:self-center"
           >
-            访问官方网站
+            Открыть официальный сайт
             <ExternalLink className="h-4 w-4" aria-hidden="true" />
             <span className="sr-only">（在新窗口打开）</span>
           </a>
@@ -388,10 +388,10 @@ function Footer({
               <span className="font-serif text-lg">星幕</span>
             </span>
             <p className="mt-4 max-w-lg text-sm leading-6 text-[#9aa0b0]">
-              星幕是一个非营利、无账号依赖的开源在线视频客户端。目录、搜索、选集与播放通过可插拔片源接入，配置和观看记录保存在当前浏览器。
+              CINEMA — видеокаталог с поиском, карточками фильмов и встроенным плеером. Каталог подключается через настраиваемые источники, а настройки и история просмотров хранятся в этом браузере.
             </p>
             <p className="mt-3 max-w-lg text-xs leading-5 text-[#5a5f70]">
-              本站不上传、存储或转码媒体文件，也不授予任何第三方内容权利。请仅使用自有、获授权或公有领域内容，完整边界请查看版权与免责声明。
+              Сервис не загружает, не хранит и не перекодирует медиафайлы и не предоставляет прав на сторонний контент. Подключайте только собственные материалы, контент с разрешением правообладателя или произведения из общественного достояния.
             </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
               <a
@@ -409,10 +409,10 @@ function Footer({
                 </span>
                 <span className="text-left">
                   <span className="block text-sm font-bold">
-                    去 GitHub 点个 Star
+                    Поставить звезду на GitHub
                   </span>
                   <span className="mt-0.5 block text-[11px] text-[#5a5f70]">
-                    支持 NebulaPlay 持续维护
+                    Поддержать развитие CINEMA
                   </span>
                 </span>
                 <ExternalLink
@@ -423,17 +423,17 @@ function Footer({
               </a>
               <span className="inline-flex items-center gap-1.5 text-xs text-[#5a5f70]">
                 <GitFork className="h-3.5 w-3.5" aria-hidden="true" />
-                AliceDel66/NebulaPlay · MIT License
+                Исходный проект NebulaPlay · лицензия MIT
               </span>
             </div>
           </div>
 
           <nav
-            aria-label="页脚导航"
+            aria-label="Навигация внизу страницы"
             className="grid grid-cols-2 gap-x-8 gap-y-8 text-sm sm:grid-cols-3 sm:gap-x-12"
           >
             <div>
-              <p className="mb-3 font-medium text-white">浏览</p>
+              <p className="mb-3 font-medium text-white">Разделы</p>
               <ul className="space-y-2.5">
                 {categories.map((label) => (
                   <li key={label}>
@@ -472,16 +472,16 @@ function Footer({
 
         <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-white/6 pt-6 text-xs text-[#5a5f70]">
           <span>
-            © 2026 NebulaPlay 星幕 · 非营利公益项目 · 内容仅供学习与交流
+            © 2026 CINEMA · Используйте только контент с разрешёнными правами
           </span>
           <span className="inline-flex items-center gap-1.5">
-            用
+            Сделано с
             <Heart
               className="h-3.5 w-3.5 text-[#e0142c]"
               fill="currentColor"
               aria-hidden="true"
             />
-            与开源精神构建
+            и открытым исходным кодом
           </span>
         </div>
       </div>
