@@ -46,7 +46,7 @@ export function EpisodePager({
       ref={containerRef}
       className={`no-scrollbar flex w-full min-w-0 max-w-full gap-2 overflow-x-auto pb-1 ${className}`}
       role="navigation"
-      aria-label="选集分页"
+      aria-label="Навигация по страницам серий"
     >
       {ranges.map((range) => (
         <button
