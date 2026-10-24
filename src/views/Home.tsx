@@ -247,7 +247,7 @@ function ContinueWatching({
             <div
               role="button"
               tabIndex={0}
-              aria-label={`继续播放${item.name} ${item.ep}`}
+              aria-label={`Продолжить просмотр: ${item.name}, ${item.ep}`}
               onClick={() => onPlay(item.titleId, historyEpisode(item))}
               onKeyDown={(event) => {
                 if (event.key !== "Enter" && event.key !== " ") return
