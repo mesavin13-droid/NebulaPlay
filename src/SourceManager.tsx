@@ -82,7 +82,7 @@ function SourceList({
               className="flex items-center gap-3 rounded-xl border border-white/6 bg-[#14161f] px-4 py-3"
             >
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#e0142c]/15 text-sm font-bold text-[#ff3b52]">
-                {c.name.slice(0, 1) || '源'}
+                {c.name.slice(0, 1) || 'И'}
               </span>
               <div className="min-w-0 flex-1">
                 <p className="flex items-center gap-2 truncate text-sm font-medium text-white">
@@ -106,13 +106,13 @@ function SourceList({
                 onClick={() => onEdit(c)}
                 className="rounded-lg px-3 py-1.5 text-xs text-[#9aa0b0] transition hover:bg-white/5 hover:text-white"
               >
-                编辑
+                Изменить
               </button>
               <button
                 onClick={() => onRemove(c.id)}
                 className="rounded-lg px-3 py-1.5 text-xs text-[#9aa0b0] transition hover:bg-[#e0142c]/15 hover:text-[#ff3b52]"
               >
-                删除
+                Удалить
               </button>
             </li>
           ))}
@@ -123,7 +123,7 @@ function SourceList({
         onClick={onAdd}
         className="mt-4 w-full rounded-xl bg-[#e0142c] py-2.5 text-sm font-bold text-white transition hover:bg-[#ff3b52]"
       >
-        ＋ 新增片源
+        ＋ Добавить источник
       </button>
     </div>
   )
@@ -327,7 +327,7 @@ function SourceForm({
 
     onSubmit({
       id: initial?.id,
-      kind: effectiveKind, // 保留 TVBox 线路标记,避免编辑后退回通用解析
+      kind: effectiveKind, // 保留 TVBox 线路标记,避免Изменить后退回通用解析
       name: name.trim(),
       tagline: tagline.trim() || undefined,
       catalogUrl: catalogUrl.trim() || undefined,
@@ -426,13 +426,13 @@ function SourceForm({
           onClick={submit}
           className="flex-1 rounded-lg bg-[#e0142c] py-2.5 text-sm font-bold text-white transition hover:bg-[#ff3b52]"
         >
-          保存
+          Сохранить
         </button>
         <button
           onClick={onCancel}
           className="rounded-lg border border-white/10 px-5 py-2.5 text-sm text-[#9aa0b0] transition hover:bg-white/5 hover:text-white"
         >
-          取消
+          Отмена
         </button>
       </div>
     </div>
