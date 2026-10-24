@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { ratingLabel, type Title } from "../data"
+import { ruLabel } from "../localization"
 import {
   clearHistory,
   historyEpisode,
@@ -157,7 +158,7 @@ export function Home({
                         : "text-[#5a5f70]"
                     }
                   >
-                    {tab}
+                    {ruLabel(tab)}
                   </button>
                 ))}
               </div>
@@ -190,7 +191,7 @@ export function Home({
 
           <div className="rounded-xl border border-white/6 bg-gradient-to-br from-[#12141d] to-[#0e1018] p-4">
             <h3 className="mb-1 font-serif text-base font-bold text-white">
-              完全免费 · 公益驱动
+              Каталог фильмов и сериалов
             </h3>
             <p className="text-xs leading-relaxed text-[#9aa0b0]">
               CINEMA подключает только собственные материалы, контент с разрешением правообладателя или произведения из общественного достояния.
@@ -228,7 +229,7 @@ function ContinueWatching({
       <div className="mb-4 flex items-end justify-between">
         <h2 className="flex items-center gap-3 font-serif text-xl font-bold text-white">
           <span className="h-5 w-1 rounded-full bg-[#e0142c]" />
-          继续观看
+          Продолжить просмотр
           <span className="text-sm font-normal text-[#9aa0b0]">
             Сохранено на устройстве · последнее место просмотра
           </span>
@@ -237,7 +238,7 @@ function ContinueWatching({
           onClick={() => clearHistory()}
           className="text-sm text-[#9aa0b0] transition hover:text-[#ff3b52]"
         >
-          清空历史
+          Очистить историю
         </button>
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
@@ -328,7 +329,7 @@ function HeroBanner({
               {hero.quality}
             </span>
             <span className="rounded bg-white/10 px-2 py-0.5 text-xs text-white/90">
-              独家首播
+              Премьера
             </span>
             <span className="flex items-center gap-0.5 text-sm font-bold text-[#e8b23a]">
               <IconStar className="h-3.5 w-3.5" /> {ratingLabel(hero)}
