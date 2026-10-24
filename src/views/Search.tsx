@@ -3,6 +3,7 @@ import { Search as SearchIcon, TrendingUp, X } from "lucide-react"
 import { ratingLabel, type Title, type VideoSource } from "../data"
 import { PageLoading } from "../PageLoading"
 import { IconStar, Img, PosterCard } from "../ui"
+import { ruLabel } from "../localization"
 
 const RECENT_KEY = "nebulaplay:searches:v1"
 
@@ -218,7 +219,7 @@ export function Search({
               </h2>
               <div className="flex flex-wrap gap-2">
                 {hot.map((g) => (
-                  <Tag key={g} label={g} onClick={() => submit(g)} />
+                  <Tag key={g} label={ruLabel(g)} onClick={() => submit(g)} />
                 ))}
               </div>
             </section>
@@ -246,7 +247,7 @@ export function Search({
           {hot.length > 0 && (
             <div className="mt-5 flex flex-wrap justify-center gap-2">
               {hot.slice(0, 6).map((g) => (
-                <Tag key={g} label={g} onClick={() => submit(g)} />
+                <Tag key={g} label={ruLabel(g)} onClick={() => submit(g)} />
               ))}
             </div>
           )}
