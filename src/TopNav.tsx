@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { NAV, type VideoSource } from './data'
+import { ruLabel } from './localization'
 import { IconChevron, IconSearch, Logo } from './ui'
 
 export function TopNav({
@@ -46,7 +47,7 @@ export function TopNav({
                 active === label ? 'text-white' : 'text-[#9aa0b0] hover:text-white'
               }`}
             >
-              {label}
+              {ruLabel(label)}
               {active === label && (
                 <span className="absolute inset-x-3 -bottom-[1px] h-0.5 rounded-full bg-[#e0142c]" />
               )}
@@ -62,23 +63,23 @@ export function TopNav({
             }}
             className="hidden items-center gap-2 rounded-full border border-white/8 bg-white/5 px-3 py-1.5 text-sm text-[#9aa0b0] transition focus-within:border-[#e0142c]/50 md:flex"
           >
-            <button type="submit" aria-label="搜索" className="transition hover:text-white">
+            <button type="submit" aria-label="Поиск" className="transition hover:text-white">
               <IconSearch className="h-4 w-4" />
             </button>
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="搜索影片、演员、导演"
+              placeholder="Фильм, актёр или режиссёр"
               className="w-40 bg-transparent text-white placeholder:text-[#5a5f70] outline-none"
             />
           </form>
 
           <span className="hidden items-center gap-1.5 whitespace-nowrap rounded-full border border-[#3fbf6a]/30 bg-[#3fbf6a]/10 px-3 py-1.5 text-sm font-medium text-[#7fe3a3] sm:flex">
-            CINEMA · 授权内容
+            CINEMA · Лицензионный контент
           </span>
 
-          <button className="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-[#e0142c] to-[#7a0a18] text-sm font-bold text-white ring-2 ring-white/10">
-            星
+          <button aria-label="CINEMA" className="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-[#e0142c] to-[#7a0a18] text-sm font-bold text-white ring-2 ring-white/10">
+            C
           </button>
         </div>
       </div>
@@ -119,13 +120,13 @@ function SourceSwitcher({
         <span className="grid h-4 w-4 place-items-center rounded-sm bg-[#e0142c] text-[9px] font-bold">
           源
         </span>
-        <span className="max-w-[7rem] truncate font-medium">{current?.name ?? '片源探测中…'}</span>
+        <span className="max-w-[7rem] truncate font-medium">{current?.name ?? 'Проверяем источники…'}</span>
         <IconChevron className={`h-4 w-4 text-[#9aa0b0] transition ${open ? 'rotate-90' : ''}`} />
       </button>
 
       {open && (
         <div className="absolute left-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-xl border border-white/8 bg-[#0e1018] shadow-2xl shadow-black/60">
-          <p className="border-b border-white/6 px-3 py-2 text-xs text-[#5a5f70]">选择片源（可插拔）</p>
+          <p className="border-b border-white/6 px-3 py-2 text-xs text-[#5a5f70]">Выберите источник видео</p>
           {/* 片源很多时(如导入 TVBox 多线路)限定固定高度,列表内部滚动,
               overscroll-contain 防止滚到底后带动整页。 */}
           <div className="max-h-[420px] overflow-y-auto overscroll-contain">
@@ -158,12 +159,12 @@ function SourceSwitcher({
                         {s.badge}
                       </span>
                       {s.online && (
-                        <span className="h-1.5 w-1.5 rounded-full bg-[#3fbf6a]" title="远程片源" />
+                        <span className="h-1.5 w-1.5 rounded-full bg-[#3fbf6a]" title="Онлайн-источник" />
                       )}
                     </span>
                     <span className="mt-0.5 block truncate text-xs text-[#5a5f70]">{s.tagline}</span>
                   </span>
-                  {activeSrc && <span className="mt-1 text-xs text-[#ff3b52]">使用中</span>}
+                  {activeSrc && <span className="mt-1 text-xs text-[#ff3b52]">Выбран</span>}
                 </button>
               )
             })}
@@ -177,7 +178,7 @@ function SourceSwitcher({
             className="flex w-full items-center gap-2 border-t border-white/6 px-3 py-2.5 text-left text-sm text-[#9aa0b0] transition hover:bg-white/5 hover:text-white"
           >
             <span className="grid h-5 w-5 place-items-center rounded bg-white/8 text-xs">＋</span>
-            自定义 / 手动配置片源
+            Добавить или настроить источник
           </button>
         </div>
       )}
