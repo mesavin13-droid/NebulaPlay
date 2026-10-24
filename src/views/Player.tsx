@@ -162,7 +162,7 @@ export function Player({
         if (alive && list.length) prefetchedSources.current.set(nextKey, list)
       })
       .catch(() => {
-        // 预取失败不影响当前播放;实际切集时仍会按正常路径重试。
+        // 预取失败不影响当前播放;实际切集时仍会按正常路径Повторить。
       })
     return () => {
       alive = false
@@ -346,13 +346,13 @@ export function Player({
               .filter((x) => x !== "选集" || isSeries)
               .map((x) => (
                 <button
-                  key={x}
+                  key={ruLabel(x)}
                   onClick={() => setTab(x)}
                   className={`relative pb-3 ${
                     tab === x ? "font-bold text-white" : "text-[#9aa0b0]"
                   }`}
                 >
-                  {x}
+                  {ruLabel(x)}
                   {tab === x && (
                     <span className="absolute inset-x-0 -bottom-px h-0.5 rounded bg-[#e0142c]" />
                   )}
@@ -411,7 +411,7 @@ export function Player({
             <div className="rounded-xl border border-white/6 bg-[#0e1018]">
               <div className="flex items-center justify-between border-b border-white/6 px-4 py-3">
                 <h3 className="font-serif text-base font-bold text-white">
-                  播放列表
+                  Список серий
                 </h3>
                 <span className="text-xs text-[#5a5f70]">
                   Доступно серий: {t.airedEpisodes} из {total}
@@ -458,7 +458,7 @@ export function Player({
           <div>
             <div className="mb-3 flex items-center justify-between">
               <h3 className="font-serif text-base font-bold text-white">
-                猜你喜欢
+                Вам также понравится
               </h3>
               <button
                 onClick={() =>
@@ -491,14 +491,14 @@ function Comments() {
     <div className="space-y-4">
       <div className="flex gap-3">
         <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#e0142c] to-[#7a0a18] text-sm font-bold text-white">
-          我
+          Я
         </div>
         <input
           placeholder="Оставьте доброжелательный комментарий…"
           className="flex-1 rounded-lg border border-white/8 bg-[#14161f] px-3 py-2 text-sm text-white placeholder:text-[#5a5f70] outline-none focus:border-[#e0142c]/50"
         />
         <button className="rounded-lg bg-[#e0142c] px-4 text-sm font-medium text-white">
-          发送
+          Отправить
         </button>
       </div>
       {list.map((c) => (
