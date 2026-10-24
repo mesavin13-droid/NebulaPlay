@@ -27,8 +27,8 @@ type View =
   | { name: "detail"; id: string }
   | { name: "player"; id: string; ep: number }
 
-const SITE_URL = "https://nebu.life"
-const REPOSITORY_URL = "https://github.com/AliceDel66/NebulaPlay"
+const SITE_URL = "https://github.com/mesavin13-droid/NebulaPlay"
+const REPOSITORY_URL = "https://github.com/mesavin13-droid/NebulaPlay"
 const BABY_HOME_URL = "https://baobeihuijia.com/"
 
 const FOOTER_COLUMNS = [
@@ -36,7 +36,7 @@ const FOOTER_COLUMNS = [
     title: "开源",
     links: [
       { label: "GitHub 仓库", href: REPOSITORY_URL },
-      { label: "在线站点", href: SITE_URL },
+      { label: "Исходный код CINEMA", href: SITE_URL },
       { label: "MIT License", href: `${REPOSITORY_URL}/blob/dev/LICENSE` },
       { label: "参与贡献", href: `${REPOSITORY_URL}#开发与贡献` },
     ],
@@ -159,10 +159,7 @@ export default function App() {
 
       <main className="min-h-[70vh]">
         {!source ? (
-          <PageLoading
-            label="正在检测可用片源"
-            detail="失活片源会自动跳过，请稍候"
-          />
+          <NoSourceSetup onManage={() => setManageOpen(true)} />
         ) : loading || !catalog ? (
           <PageLoading
             label={loadingLabel(view)}
@@ -489,5 +486,30 @@ function Footer({
         </div>
       </div>
     </footer>
+  )
+}
+
+
+function NoSourceSetup({ onManage }: { onManage: () => void }) {
+  return (
+    <section className="mx-auto flex min-h-[65vh] max-w-3xl flex-col items-center justify-center px-5 py-16 text-center">
+      <div className="grid h-16 w-16 place-items-center rounded-2xl border border-[#e0142c]/25 bg-[#e0142c]/10 text-2xl text-[#ff3b52]">
+        ▶
+      </div>
+      <p className="mt-5 text-xs font-bold uppercase tracking-[0.25em] text-[#ff3b52]">CINEMA</p>
+      <h1 className="mt-3 text-3xl font-bold text-white sm:text-4xl">Подключим каталог фильмов</h1>
+      <p className="mt-4 max-w-xl text-sm leading-7 text-[#9aa0b0]">
+        По умолчанию отключены непроверенные сторонние источники. Добавь каталог или прямую видеоссылку, на использование которой у тебя есть разрешение. Пока источники не подключены, реальные фильмы не отображаются.
+      </p>
+      <button
+        onClick={onManage}
+        className="mt-7 rounded-xl bg-[#e0142c] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#ff3b52]"
+      >
+        Настроить источник
+      </button>
+      <p className="mt-4 max-w-xl text-xs leading-6 text-[#5a5f70]">
+        Следующий этап — подключить стартовый каталог контента с подтверждёнными правами и проверить сборку перед публикацией.
+      </p>
+    </section>
   )
 }
