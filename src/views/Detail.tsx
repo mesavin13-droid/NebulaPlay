@@ -166,7 +166,7 @@ export function Detail({
         <div className="min-w-0">
           {detailError && (
             <p className="mb-5 rounded-lg border border-[#e0142c]/30 bg-[#e0142c]/10 px-4 py-3 text-sm text-[#ff9aaa]">
-              Не удалось загрузить данные: {detailError}
+              Не удалось загрузить данные: {ruMessage(detailError)}
             </p>
           )}
           <Panel title="Описание">
