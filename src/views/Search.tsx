@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { Search as SearchIcon, TrendingUp, X } from "lucide-react"
 import { ratingLabel, type Title, type VideoSource } from "../data"
+import { ruLabel } from "../localization"
 import { PageLoading } from "../PageLoading"
 import { IconStar, Img, PosterCard } from "../ui"
 import { ruLabel } from "../localization"
