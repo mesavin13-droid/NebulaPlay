@@ -25,7 +25,7 @@ import { PageLoading } from "../PageLoading"
 import { usePlaylist } from "../playlist"
 import type { Catalog } from "../useCatalog"
 import { IconPlay, IconStar, Img, PosterCard, Pill } from "../ui"
-import { ruLabel } from "../localization"
+import { ruLabel, ruMessage } from "../localization"
 
 // 侧栏内容类别跟随当前片源返回的分类(推荐/经典重温为本地合成入口,常驻)。
 const CONTENT_FALLBACK = ["电影", "剧集", "动漫", "综艺", "纪录片"]
@@ -455,7 +455,7 @@ export function Browse({
                     {loadingAll ? "Загружаем всё…" : "Загрузить весь каталог"}
                   </button>
                 </div>
-                {status && <p className="text-xs text-[#9aa0b0]">{status}</p>}
+                {status && <p className="text-xs text-[#9aa0b0]">{ruMessage(status)}</p>}
               </div>
             )}
           </>
