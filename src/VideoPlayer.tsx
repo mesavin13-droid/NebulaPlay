@@ -913,7 +913,7 @@ export function VideoPlayer({
             }}
             className="absolute bottom-[72px] right-4 rounded-md border border-white/25 bg-black/60 px-3 py-1.5 text-xs font-medium text-white backdrop-blur transition hover:bg-black/85"
           >
-            跳过片头
+            Пропустить вступление
           </button>
         )}
         {skipOutroSeconds > 0 &&
@@ -925,7 +925,7 @@ export function VideoPlayer({
               onClick={() => onSkipOutro?.()}
               className="absolute bottom-[72px] right-4 rounded-md border border-white/25 bg-black/60 px-3 py-1.5 text-xs font-medium text-white backdrop-blur transition hover:bg-black/85"
             >
-              跳过片尾
+              Пропустить концовку
             </button>
           )}
 
@@ -1007,7 +1007,7 @@ export function VideoPlayer({
               onClick={sendDanmaku}
               className="shrink-0 rounded-full bg-[#e0142c] px-3 py-1 text-xs font-bold text-white transition hover:bg-[#ff3b52]"
             >
-              发送
+              Отправить
             </button>
           </div>
 
@@ -1322,7 +1322,7 @@ function MenuSeconds({
           onChange={(event) => onChange(Number(event.target.value))}
           className="h-6 w-14 rounded-md border border-white/10 bg-[#14161f] px-2 text-center text-xs tabular-nums text-white outline-none focus:border-[#e0142c]/60"
         />
-        秒
+        с
       </span>
     </label>
   )
