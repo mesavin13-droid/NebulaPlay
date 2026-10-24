@@ -126,7 +126,7 @@ export function Detail({
                 <QualityBadge q={t.quality} />
                 <span>{t.year}</span>
                 <span>·</span>
-                <span>{t.region}</span>
+                <span>{ruLabel(t.region)}</span>
                 <span>·</span>
                 <span>{t.genres.map(ruLabel).join(" / ")}</span>
                 <span>·</span>
@@ -380,7 +380,7 @@ function TrendPanel({ trend }: { trend: RatingPoint[] }) {
       <div className="mt-1 flex justify-between text-[10px] text-[#5a5f70]">
         {trend.map((p, i) => (
           <span key={i}>
-            {p.d.replace("第", "").replace("集", "").replace("幕", "幕")}
+            {p.d.replace("第", "Серия ").replace("集", "").replace("幕", "")}
           </span>
         ))}
       </div>
